@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import DraggableBlock from "./dragg";
+import NavbarBlock from "./BuiltinNav";
 import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor } from "@dnd-kit/core";
 
 export default function Builder() {
   const [blocks, setBlocks] = useState([]);
-  const [bgColor, setBgColor] = useState("#ffffff");
+  const [bgColor, setBgColor] = useState("transparent");
+   const [navBgColor, setNavBgColor] = useState("#ffffff");
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   
   const selectedBlock = blocks.find((b) => b.id === selectedBlockId);
@@ -17,26 +19,65 @@ export default function Builder() {
 
   // Add block (keeps existing behavior)
   const addBlock = (type) => {
-    const id = String(Date.now());
-    const newBlock = {
+  const id = String(Date.now());
+
+  //  If it's a navbar, handle it first and return
+  if (type === "navbar") {
+    const hasNavbar = blocks.some(b => b.type === "navbar");
+    if (hasNavbar) return; // prevent multiple navbars
+
+    const newNavbar = {
       id,
-      type,
-      x: 100,
-      y: 100,
-      bold : false ,
-      width: type === "image" ? 220 : 250,
-      height: type === "image" ? 180 : "auto",
-      fontSize: 16,
-      content: type === "text" ? "Text..." : "",
-      color: type === "text" ? "#000000" : "#3b82f6",
-      label: type === "button" ? "Click Me" : "",
-      buttonColor: "#3b82f6",
-      src: null,
-      isEditing: false,  
+      type: "navbar",
+      x: 0,
+      y: 0,
+      width: "100%",
+      height: 64,
+      navBgColor: "#ffffff",
+      logoText: "Brand",
+      logoSrc: null,
+      links: ["Home", "About", "Contact"],
+      showCTA: true,
+      ctaLabel: "Sign up",
+      logoColor: "#000000",
+      logoFontSize: 18,
+      logoBold: false,
+      linkColor: "#333333",
+      linkFontSize: 16,
+      ctaBgColor: "#2563eb",
+      ctaTextColor: "#ffffff",
+      ctaBold: false,
+      ctaFontSize: 14,
+      bgColor: "transparent",
     };
-    setBlocks((prev) => [...prev, newBlock]);
+    setBlocks((prev) => [...prev, newNavbar]);
     setSelectedBlockId(id);
+    return; //  stop here so no second block is added
+  }
+
+  //  Otherwise, handle normal blocks (text, image, button)
+  const newBlock = {
+    id,
+    type,
+    x: 100,
+    y: 100,
+    bold: false,
+    width: type === "image" ? 220 : 250,
+    height: type === "image" ? 180 : "auto",
+    fontSize: 16,
+    content: type === "text" ? "Text..." : "",
+    color: type === "text" ? "#000000" : "#3b82f6",
+    label: type === "button" ? "Click Me" : "",
+    buttonColor: "#3b82f6",
+    src: null,
+    isEditing: false,
+    textAlign: "left",
   };
+
+  setBlocks((prev) => [...prev, newBlock]);
+  setSelectedBlockId(id);
+};
+
 
   const updateBlock = (id, key, value) => {
     setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, [key]: value } : b)));
@@ -111,8 +152,13 @@ export default function Builder() {
     // If user clicked inside toolbar, toolbar's onMouseDown already stopPropagation,
     // but keep this robust: if nearest toolbar found, do nothing
     if (e.target.closest(".toolbar")) return;
+    if (e.target.closest(".navbar-editable")) return; 
     setSelectedBlockId(null);
   };
+
+
+
+  const navbarBlock = blocks.find(b => b.type === "navbar");
 
   return (
     <div className="min-h-screen flex" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
@@ -129,8 +175,11 @@ export default function Builder() {
         <button className="w-full bg-gradient-to-r from-purple-300 to-indigo-600 text-white p-3 rounded-xl" onClick={() => addBlock("button")}>
           🔘 Add Button
         </button>
-        <button className="w-full bg-gradient-to-r from-pink-400 to-blue-600 text-white p-3 rounded-xl mt-3" onClick={() => addBlock("text")}>
-          ➕ Add Navbar
+        <button
+          className="w-full bg-gradient-to-r from-amber-400 to-orange-500 text-white p-3 rounded-xl mb-3"
+          onClick={() => addBlock("navbar")}
+        >
+          🧭 Add Navbar
         </button>
         <button className="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white p-3 rounded-xl mt-3" onClick={() => addBlock("text")}>
           ➕ Add Footer
@@ -139,6 +188,10 @@ export default function Builder() {
         <div className="mt-6">
           <h3 className="text-sm font-semibold text-gray-600 mb-2">Background</h3>
           <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-full h-12 border rounded cursor-pointer" />
+        </div>
+        <div className="mt-6">
+          <h3 className="text-sm font-semibold text-gray-600 mb-2">Navbar Background</h3>
+          <input type="color" value={navBgColor} onChange={(e) => setNavBgColor(e.target.value)} className="w-full h-12 border rounded cursor-pointer" />
         </div>
       </div>
 
@@ -204,16 +257,52 @@ export default function Builder() {
                 >
                   <b>B</b>
                 </button>
+                <div className="flex items-center gap-2">
+  <button
+    onPointerDown={(e) => e.stopPropagation()}
+    onClick={() => updateBlock(selectedBlock.id, "textAlign", "left")}
+    className={`px-2 py-1 border rounded-md text-sm ${
+      selectedBlock.textAlign === "left"
+        ? "bg-gray-900 text-white border-gray-900"
+        : "bg-white text-gray-700 hover:bg-gray-100"
+    }`}
+  >
+    ⬅
+  </button>
+
+  <button
+    onPointerDown={(e) => e.stopPropagation()}
+    onClick={() => updateBlock(selectedBlock.id, "textAlign", "center")}
+    className={`px-2 py-1 border rounded-md text-sm ${
+      selectedBlock.textAlign === "center"
+        ? "bg-gray-900 text-white border-gray-900"
+        : "bg-white text-gray-700 hover:bg-gray-100"
+    }`}
+  >
+    ⬍
+  </button>
+
+  <button
+    onPointerDown={(e) => e.stopPropagation()}
+    onClick={() => updateBlock(selectedBlock.id, "textAlign", "right")}
+    className={`px-2 py-1 border rounded-md text-sm ${
+      selectedBlock.textAlign === "right"
+        ? "bg-gray-900 text-white border-gray-900"
+        : "bg-white text-gray-700 hover:bg-gray-100"
+    }`}
+  >
+    ➡
+  </button>
+</div>
+
               </>
             )}
-
             {selectedBlock.type === "button" && (
               <>
                 <input onPointerDown={(e) => e.stopPropagation()} type="color" value={selectedBlock.color} onChange={(e) => updateBlock(selectedBlock.id, "color", e.target.value)} />
                 <input onPointerDown={(e) => e.stopPropagation()} type="text" value={selectedBlock.label} onChange={(e) => updateBlock(selectedBlock.id, "label", e.target.value)} className="border rounded p-1" />
               </>
             )}
-
             {selectedBlock.type === "image" && (
               <>
                 <input
@@ -229,15 +318,90 @@ export default function Builder() {
                 </button>
               </>
             )}
+            {selectedBlock.type === "navbar" && (
+  <>
+    <div className="flex items-center gap-2">
+      <label className="text-sm text-gray-600">Logo Color</label>
+      <input
+        type="color"
+        value={selectedBlock.logoColor}
+        onChange={(e) => updateBlock(selectedBlock.id, "logoColor", e.target.value)}
+      />
+    </div>
+
+    <div className="flex items-center gap-2">
+      <label className="text-sm text-gray-600">Links Color</label>
+      <input
+        type="color"
+        value={selectedBlock.linkColor}
+        onChange={(e) => updateBlock(selectedBlock.id, "linkColor", e.target.value)}
+      />
+    </div>
+
+    <div className="flex items-center gap-2">
+      <label className="text-sm text-gray-600">Button BG</label>
+      <input
+        type="color"
+        value={selectedBlock.ctaBgColor}
+        onChange={(e) => updateBlock(selectedBlock.id, "ctaBgColor", e.target.value)}
+      />
+    </div>
+
+    <div className="flex items-center gap-2">
+      <label className="text-sm text-gray-600">Button Text</label>
+      <input
+        type="color"
+        value={selectedBlock.ctaTextColor}
+        onChange={(e) => updateBlock(selectedBlock.id, "ctaTextColor", e.target.value)}
+      />
+    </div>
+
+    <button
+      onClick={() => updateBlock(selectedBlock.id, "logoBold", !selectedBlock.logoBold)}
+      className={`px-2 py-1 border rounded ${selectedBlock.logoBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
+    >
+      <b>B</b> Logo
+    </button>
+
+    <button
+      onClick={() => updateBlock(selectedBlock.id, "ctaBold", !selectedBlock.ctaBold)}
+      className={`px-2 py-1 border rounded ${selectedBlock.ctaBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
+    >
+      <b>B</b> Button
+    </button>
+  </>
+            )}
+
 
             <button onClick={() => setSelectedBlockId(null)} className="px-3 py-1 bg-slate-100 rounded">
               Done
             </button>
           </div>
         )}
-
+        
+        
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
           <div style={{ backgroundColor: bgColor }} className="w-[90%] min-h-[100vh] relative rounded-xl border border-gray-200 shadow-inner p-6 mx-auto">
+            {/* NAVBAR (non-draggable, always on top) */}
+            {navbarBlock && (
+  <div
+  onMouseDown={(e) => e.stopPropagation()}
+    onClick={(e) => {
+      e.stopPropagation();
+      setSelectedBlockId(navbarBlock.id);
+    }}
+    style={{ backgroundColor: navBgColor }}
+    className={`relative mb-6 navbar-editable ${selectedBlockId === navbarBlock.id ? "ring-2 ring-blue-400" : ""}`}
+  >
+    <NavbarBlock
+      block={navbarBlock}
+      isEditing={selectedBlockId === navbarBlock.id}
+      onSelect={() => setSelectedBlockId(navbarBlock.id)}
+      onUpdate={(key, value) => updateBlock(navbarBlock.id, key, value)}
+      onUploadLogo={(file) => handleImageUpload(navbarBlock.id, file)}
+    />
+  </div>
+            )}
             {blocks.map((block) => (
               <DraggableBlock
                 key={block.id}
@@ -248,6 +412,7 @@ export default function Builder() {
                 onStartResize={startResizing}
                 onSelect={selectBlock}
               >
+              
                 {/* TEXT */}
                 {block.type === "text" && (
                   <div
@@ -256,6 +421,7 @@ export default function Builder() {
                       setSelectedBlockId(block.id);
                     }}
                     style={{
+                      textAlign: block.textAlign,
                       fontWeight: block.bold ? "bold" : "normal",
                       width: typeof block.width === "number" ? block.width : block.width,
                       height: block.height === "auto" ? "auto" : block.height,
