@@ -1,16 +1,42 @@
-import React, { useState } from "react";
+import React, { useState , useEffect} from "react";
 import DraggableBlock from "./dragg";
 import NavbarBlock from "./BuiltinNav";
 import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor } from "@dnd-kit/core";
+import { Type, Image as ImageIcon, MousePointerClick, Navigation, LayoutTemplate } from "lucide-react";
 
 export default function Builder() {
-  const [blocks, setBlocks] = useState([]);
-  const [bgColor, setBgColor] = useState("transparent");
-   const [navBgColor, setNavBgColor] = useState("#ffffff");
-  const [selectedBlockId, setSelectedBlockId] = useState(null);
+
+  const [blocks, setBlocks] = useState(() => {
+    const saved = localStorage.getItem("builderBlocks");
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [canvasHeight, setCanvasHeight] = useState(800);
+
+
   
+const [bgColor, setBgColor] = useState(() => localStorage.getItem("builderBgColor") || "#ffffff");
+const [navBgColor, setNavBgColor] = useState(() => localStorage.getItem("builderNavBgColor") || "#f8f9fa");
+
+
+  const [selectedBlockId, setSelectedBlockId] = useState(null);
   const selectedBlock = blocks.find((b) => b.id === selectedBlockId);
+
+
   const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
+
+
+  // saving the block to local storage 
+  useEffect(() => {
+  localStorage.setItem("builderBlocks", JSON.stringify(blocks));
+  }, [blocks]);
+  // saving the background colors to local storage as well
+  useEffect(() => {
+  localStorage.setItem("builderBgColor", bgColor);
+  }, [bgColor]);
+  useEffect(() => {
+  localStorage.setItem("builderNavBgColor", navBgColor);
+  }, [navBgColor]);
+
 
   // selectBlock now only needs id
   const selectBlock = (id) => {
@@ -44,7 +70,7 @@ export default function Builder() {
       logoBold: false,
       linkColor: "#333333",
       linkFontSize: 16,
-      ctaBgColor: "#2563eb",
+      ctaBgColor: "#06276eff",
       ctaTextColor: "#ffffff",
       ctaBold: false,
       ctaFontSize: 14,
@@ -66,9 +92,9 @@ export default function Builder() {
     height: type === "image" ? 180 : "auto",
     fontSize: 16,
     content: type === "text" ? "Text..." : "",
-    color: type === "text" ? "#000000" : "#3b82f6",
+    color: type === "text" ? "#000000" : "#06276eff",
     label: type === "button" ? "Click Me" : "",
-    buttonColor: "#3b82f6",
+    buttonColor: "#06276eff",
     src: null,
     isEditing: false,
     textAlign: "left",
@@ -78,6 +104,12 @@ export default function Builder() {
   setSelectedBlockId(id);
 };
 
+  // Auto-expand canvas height based on block positions
+  useEffect(() => {
+    if (blocks.length === 0) return;
+    const maxY = Math.max(...blocks.map((b) => b.y + (b.height || 100)), 800);
+    setCanvasHeight(maxY + 200);
+  }, [blocks]);
 
   const updateBlock = (id, key, value) => {
     setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, [key]: value } : b)));
@@ -89,6 +121,12 @@ export default function Builder() {
     reader.onloadend = () => updateBlock(id, "src", reader.result);
     reader.readAsDataURL(file);
   };
+  const handleLogoUpload = (id, file) => {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onloadend = () => updateBlock(id, "logoSrc", reader.result);
+  reader.readAsDataURL(file);
+};
 
   const deleteBlock = (id) => {
     setBlocks((prev) => prev.filter((b) => b.id !== id));
@@ -146,7 +184,6 @@ export default function Builder() {
     window.addEventListener("pointerup", handlePointerUp);
   };
 
-
   // Canvas mouse down: deselect unless click inside toolbar (toolbar stops propagation anyway)
   const handleCanvasMouseDown = (e) => {
     // If user clicked inside toolbar, toolbar's onMouseDown already stopPropagation,
@@ -156,49 +193,92 @@ export default function Builder() {
     setSelectedBlockId(null);
   };
 
-
-
   const navbarBlock = blocks.find(b => b.type === "navbar");
 
   return (
     <div className="min-h-screen flex" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
       {/* Sidebar */}
-      <div className="w-64 backdrop-blur-md p-6 bg-pink-100 border-r border-gray-200 sticky top-0 h-screen">
-        <h2 className="text-xl font-extrabold mb-6 text-gray-800">🎨 Blocks</h2>
+ <div className="w-64 h-screen sticky top-0 bg-pink-50/80 backdrop-blur-lg border-r border-pink-100 p-6">
+  <h2 className="text-xl font-bold mb-6 text-gray-800">🎨 Blocks</h2>
 
-        <button className="w-full bg-gradient-to-r from-blue-300 to-blue-600 text-white p-3 rounded-xl mb-3" onClick={() => addBlock("text")}>
-          ➕ Add Text
-        </button>
-        <button className="w-full bg-gradient-to-r from-pink-300 to-pink-500 text-white p-3 rounded-xl mb-3" onClick={() => addBlock("image")}>
-          🖼️ Add Image
-        </button>
-        <button className="w-full bg-gradient-to-r from-purple-300 to-indigo-600 text-white p-3 rounded-xl" onClick={() => addBlock("button")}>
-          🔘 Add Button
-        </button>
-        <button
-          className="w-full bg-gradient-to-r from-amber-400 to-orange-500 text-white p-3 rounded-xl mb-3"
-          onClick={() => addBlock("navbar")}
-        >
-          🧭 Add Navbar
-        </button>
-        <button className="w-full bg-gradient-to-r from-blue-400 to-blue-600 text-white p-3 rounded-xl mt-3" onClick={() => addBlock("text")}>
-          ➕ Add Footer
-        </button>
+  <button
+    className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl mb-3 transition-all shadow-sm"
+    onClick={() => addBlock('text')}
+  >
+    <Type className="w-5 h-5 text-gray-700" />
+    Add Text
+  </button>
 
-        <div className="mt-6">
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Background</h3>
-          <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-full h-12 border rounded cursor-pointer" />
-        </div>
-        <div className="mt-6">
-          <h3 className="text-sm font-semibold text-gray-600 mb-2">Navbar Background</h3>
-          <input type="color" value={navBgColor} onChange={(e) => setNavBgColor(e.target.value)} className="w-full h-12 border rounded cursor-pointer" />
-        </div>
-      </div>
+  <button
+    className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl mb-3 transition-all shadow-sm"
+    onClick={() => addBlock('image')}
+  >
+    <ImageIcon className="w-5 h-5 text-gray-700" />
+    Add Image
+  </button>
+
+  <button
+    className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl mb-3 transition-all shadow-sm"
+    onClick={() => addBlock('button')}
+  >
+    <MousePointerClick className="w-5 h-5 text-gray-700" />
+    Add Button
+  </button>
+
+  <button
+    className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl mb-3 transition-all shadow-sm"
+    onClick={() => addBlock('navbar')}
+  >
+    <Navigation className="w-5 h-5 text-gray-700" />
+    Add Navbar
+  </button>
+
+  <button
+    className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl mb-3 transition-all shadow-sm"
+    onClick={() => addBlock('footer')}
+  >
+    <LayoutTemplate className="w-5 h-5 text-gray-700" />
+    Add Footer
+  </button>
+  <button
+  onClick={() => {
+    if (window.confirm("Clear your saved layout?")) {
+      localStorage.clear();
+      setBlocks([]);
+      setBgColor("#ffffff");
+      setNavBgColor("#f8f9fa");
+    }
+  }}
+  className="w-full bg-gray-200 text-gray-800 p-3 rounded-xl mt-6 hover:bg-gray-300 transition"
+>
+  🧹 Reset Project
+</button>
+
+
+  <div className="mt-6">
+    <h3 className="text-sm font-semibold text-gray-600 mb-2">Background</h3>
+    <input
+      type="color"
+      value={bgColor}
+      onChange={(e) => setBgColor(e.target.value)}
+      className="w-full h-10 border border-pink-200 rounded cursor-pointer bg-transparent"
+    />
+  </div>
+
+  <div className="mt-6">
+    <h3 className="text-sm font-semibold text-gray-600 mb-2">Navbar Background</h3>
+    <input
+      type="color"
+      value={navBgColor}
+      onChange={(e) => setNavBgColor(e.target.value)}
+      className="w-full h-10 border border-pink-200 rounded cursor-pointer bg-transparent"
+    />
+  </div>
+</div>
 
       {/* Canvas */}
       <div className="flex-1 bg-gray-50 p-8" onMouseDown={handleCanvasMouseDown}>
         <h3 className="text-3xl font-extrabold text-gray-700 mb-6 text-center">Start building below</h3>
-      
         {/* GLOBAL TOOLBAR  */}
         {selectedBlock && (
           <div
@@ -378,10 +458,12 @@ export default function Builder() {
             </button>
           </div>
         )}
-        
-        
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-          <div style={{ backgroundColor: bgColor }} className="w-[90%] min-h-[100vh] relative rounded-xl border border-gray-200 shadow-inner p-6 mx-auto">
+          <div style={{
+          backgroundColor: bgColor || "#fff",
+          minHeight: `${canvasHeight}px`,
+        }}
+          className="canvas-area w-[90%] mx-auto relative overflow-hidden rounded-xl border border-gray-300 shadow-inner p-6 transition-all duration-300">
             {/* NAVBAR (non-draggable, always on top) */}
             {navbarBlock && (
   <div
@@ -398,7 +480,7 @@ export default function Builder() {
       isEditing={selectedBlockId === navbarBlock.id}
       onSelect={() => setSelectedBlockId(navbarBlock.id)}
       onUpdate={(key, value) => updateBlock(navbarBlock.id, key, value)}
-      onUploadLogo={(file) => handleImageUpload(navbarBlock.id, file)}
+      onUploadLogo={(file) => handleLogoUpload(navbarBlock.id, file)}
     />
   </div>
             )}
@@ -487,11 +569,10 @@ export default function Builder() {
                     {selectedBlockId === block.id && (
                       <>
                         {/* <button onPointerDown={(e) => e.stopPropagation()} onClick={() => deleteBlock(block.id)} className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-7 h-7">✖</button> */}
-                        <div onPointerDown={(e) => startResizing(e, block.id)} className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full" style={{ transform: "translate(50%,50%)", cursor: "se-resize" }} />
+                        <div onPointerDown={(e) => startResizing(e, block.id)} className="absolute bottom-0 right-0 w-3 h-3 bg-blue-800 rounded-full" style={{ transform: "translate(50%,50%)", cursor: "se-resize" }} />
                       </>
                     )}
-
-                    <button onPointerDown={(e) => e.stopPropagation()} style={{ backgroundColor: block.color || "#3b82f6" }} className="w-full h-full text-white font-semibold rounded shadow-md">{block.label}</button>
+                    <button onPointerDown={(e) => e.stopPropagation()} style={{ backgroundColor: block.color || "#06276eff" }} className="w-full h-full text-white font-semibold rounded shadow-md">{block.label}</button>
                   </div>
                 )}
               </DraggableBlock>

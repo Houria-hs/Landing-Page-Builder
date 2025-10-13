@@ -1,4 +1,5 @@
 import React, { useRef } from "react";
+import { Image, Type, Trash } from "lucide-react"; // add nice icons
 
 export default function NavbarBlock({
   block = {},
@@ -18,7 +19,7 @@ export default function NavbarBlock({
     height = 64,
   } = block || {};
 
-  const triggerLogoFile = () => fileRef.current && fileRef.current.click();
+  const triggerLogoFile = () => fileRef.current?.click();
 
   return (
     <div className="relative">
@@ -29,7 +30,7 @@ export default function NavbarBlock({
           onSelect && onSelect();
         }}
         className={`w-full top-0 z-40 transition-all duration-200 ${
-          isEditing ? "ring-2 ring-blue-400 rounded-md" : ""
+          isEditing ? "ring-2 ring-pink-400 rounded-md" : ""
         }`}
       >
         <div
@@ -37,24 +38,24 @@ export default function NavbarBlock({
           style={{ height }}
         >
           {/* LOGO */}
-          <div className="flex items-center gap-3"
-          >
+          <div className="flex items-center gap-3">
             {logoSrc ? (
               <img
                 src={logoSrc}
                 alt="logo"
-                className="h-8 w-auto object-contain"
+                className="h-10 w-auto object-contain rounded"
               />
             ) : (
-              <div className="text-lg font-semibold select-none"
-               style={{
-                color: block.logoColor,
-                fontSize: block.logoFontSize,
-                fontWeight: block.logoBold ? "bold" : "normal",
-            }}
+              <span
+                className="text-xl font-semibold select-none"
+                style={{
+                  color: block.logoColor || "#333",
+                  fontSize: block.logoFontSize || "20px",
+                  fontWeight: block.logoBold ? "bold" : "normal",
+                }}
               >
                 {logoText}
-              </div>
+              </span>
             )}
           </div>
 
@@ -64,11 +65,11 @@ export default function NavbarBlock({
               <a
                 key={i}
                 href="#"
-                className="text-sm text-gray-700 hover:underline"
-                  style={{
-    color: block.linkColor,
-    fontSize: block.linkFontSize,
-  }}
+                style={{
+                  color: block.linkColor || "#333",
+                  fontSize: block.linkFontSize || "14px",
+                }}
+                className="hover:underline"
               >
                 {link}
               </a>
@@ -77,81 +78,89 @@ export default function NavbarBlock({
 
           {/* CTA */}
           {showCTA && (
-            <button className="px-4 py-2 rounded bg-blue-600 text-white text-sm"
-             style={{
-    backgroundColor: block.ctaBgColor,
-    color: block.ctaTextColor,
-    fontWeight: block.ctaBold ? "bold" : "normal",
-    fontSize: block.ctaFontSize,
-  }}
-  >
+            <button
+              className="px-4 py-2 rounded text-sm transition"
+              style={{
+                backgroundColor: block.ctaBgColor || "#2563eb",
+                color: block.ctaTextColor || "#fff",
+                fontWeight: block.ctaBold ? "bold" : "normal",
+                fontSize: block.ctaFontSize || "14px",
+              }}
+            >
               {ctaLabel}
             </button>
           )}
         </div>
       </header>
 
-      {/* === EDITING TOOLBAR === */}
+      {/* === EDIT TOOLBAR === */}
       {isEditing && (
-        <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-[90%] bg-white border border-gray-300 rounded-lg shadow-lg p-4 z-50">
+        <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-[90%] bg-white border border-gray-300 rounded-xl shadow-lg p-4 z-50">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
-            {/* Logo */}
-            <div className="flex flex-col gap-1">
-              <label className="font-medium text-gray-600">Logo Text</label>
-              <input
-                onClick={(e) => e.stopPropagation()}
-                className="border rounded px-2 py-1"
-                value={logoText}
-                onChange={(e) => onUpdate("logoText", e.target.value)}
-              />
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  triggerLogoFile();
-                }}
-                className="border rounded px-2 py-1 bg-gray-100"
-              >
-                Change Logo
-              </button>
-              <input
-                ref={fileRef}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) onUploadLogo(f);
-                }}
-                style={{ display: "none" }}
-                type="file"
-                accept="image/*"
-              />
-            </div>
-
-            {/* Links */}
-            <div className="flex flex-col gap-1">
-              <label className="font-medium text-gray-600">Navigation Links</label>
-              {links.map((link, i) => (
-                <div key={i} className="flex items-center gap-1">
+            {/* Logo Options */}
+            <div className="flex flex-col gap-2">
+              <label className="font-medium text-gray-700 flex items-center gap-1">
+                <Type size={14} /> Logo
+              </label>
+              {!logoSrc ? (
+                <>
                   <input
+                    className="border rounded px-2 py-1"
+                    value={logoText}
                     onClick={(e) => e.stopPropagation()}
-                    value={link}
-                    onChange={(e) => {
-                      const next = [...links];
-                      next[i] = e.target.value;
-                      onUpdate("links", next);
-                    }}
-                    className="border rounded px-2 py-1 w-full"
+                    onChange={(e) => onUpdate("logoText", e.target.value)}
                   />
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      const next = links.filter((_, idx) => idx !== i);
-                      onUpdate("links", next);
+                      triggerLogoFile();
                     }}
-                    className="px-1 py-0.5 bg-red-100 text-red-600 rounded"
+                    className="flex items-center gap-2 justify-center text-gray-600 border rounded px-2 py-1 hover:bg-gray-100"
                   >
-                    ✕
+                    <Image size={14} /> Upload Logo
+                  </button>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) onUploadLogo(file);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onUpdate("logoSrc", null);
+                    }}
+                    className="flex items-center gap-1 text-red-500 hover:text-red-700"
+                  >
+                    <Trash size={14} /> Remove Logo
                   </button>
                 </div>
+              )}
+            </div>
+
+            {/* Links */}
+            <div className="flex flex-col gap-1">
+              <label className="font-medium text-gray-700">Navigation</label>
+              {links.map((link, i) => (
+                <input
+                  key={i}
+                  value={link}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => {
+                    const next = [...links];
+                    next[i] = e.target.value;
+                    onUpdate("links", next);
+                  }}
+                  className="border rounded px-2 py-1"
+                />
               ))}
               <button
                 onClick={(e) => {
@@ -166,23 +175,22 @@ export default function NavbarBlock({
 
             {/* CTA */}
             <div className="flex flex-col gap-1">
-              <label className="font-medium text-gray-600">CTA Button</label>
+              <label className="font-medium text-gray-700">CTA Button</label>
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={!!showCTA}
-                  onChange={(e) => onUpdate("showCTA", e.target.checked)}
+                  checked={showCTA}
                   onClick={(e) => e.stopPropagation()}
+                  onChange={(e) => onUpdate("showCTA", e.target.checked)}
                 />
                 <span>Show CTA</span>
               </label>
               {showCTA && (
                 <input
-                  onClick={(e) => e.stopPropagation()}
                   value={ctaLabel}
+                  onClick={(e) => e.stopPropagation()}
                   onChange={(e) => onUpdate("ctaLabel", e.target.value)}
                   className="border rounded px-2 py-1"
-                  placeholder="Button text"
                 />
               )}
             </div>
@@ -192,4 +200,5 @@ export default function NavbarBlock({
     </div>
   );
 }
+
 
