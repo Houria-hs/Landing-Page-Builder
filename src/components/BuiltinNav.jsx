@@ -67,7 +67,8 @@ export default function NavbarBlock({
                 href="#"
                 style={{
                   color: block.linkColor || "#333",
-                  fontSize: block.linkFontSize || "14px",
+                  fontSize: block.linksFontSize || "14px",
+                  fontWeight : block.linksBold ,
                 }}
                 className="hover:underline"
               >
@@ -85,6 +86,7 @@ export default function NavbarBlock({
                 color: block.ctaTextColor || "#fff",
                 fontWeight: block.ctaBold ? "bold" : "normal",
                 fontSize: block.ctaFontSize || "14px",
+                
               }}
             >
               {ctaLabel}

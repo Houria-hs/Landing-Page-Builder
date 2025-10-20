@@ -1,9 +1,12 @@
 import React from 'react'
 import Footer from './Footer'
 import { Link } from 'react-router-dom'
+import Navbar from './Navbar'
 
 const HomePage = () => {
   return (
+    <>
+    <Navbar/>
     <div className='flex flex-col min-h-screen bg-pink-50 font-sans'>
       <header className="flex-1 flex flex-col items-center justify-center text-center px-6 
                          bg-gradient-to-b from-pink-100 via-pink-50 to-blue-50">
@@ -42,6 +45,7 @@ const HomePage = () => {
 
       <Footer />
     </div>
+    </>
   )
 }
 

@@ -15,7 +15,8 @@ export default function DraggableBlock({
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: String(id),
   });
-
+  
+  
   const style = {
     position: "absolute",
     left: x,
