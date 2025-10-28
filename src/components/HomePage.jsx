@@ -1,5 +1,5 @@
 import React from 'react'
-import Footer from './Footer'
+// import Footer from './Footer'
 import { Link } from 'react-router-dom'
 import Navbar from './Navbar'
 
@@ -43,7 +43,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      <Footer />
+      {/* <Footer /> */}
     </div>
     </>
   )

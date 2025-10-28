@@ -1,6 +1,7 @@
 import React, { useState , useEffect} from "react";
 import DraggableBlock from "./dragg";
 import NavbarBlock from "./BuiltinNav";
+import FontSelector from "./FontSelector";
 import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor } from "@dnd-kit/core";
 import { Type, Image as ImageIcon, MousePointerClick, Navigation, LayoutTemplate } from "lucide-react";
 
@@ -11,6 +12,7 @@ export default function Builder() {
     return saved ? JSON.parse(saved) : [];
   });
   const [canvasHeight, setCanvasHeight] = useState(800);
+
 
   const [bgColor, setBgColor] = useState(() => localStorage.getItem("builderBgColor") || "#ffffff");
   const [navBgColor, setNavBgColor] = useState(() => localStorage.getItem("builderNavBgColor") || "#f8f9fa");
@@ -30,6 +32,7 @@ export default function Builder() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
+
 
 
   // saving the block to local storage 
@@ -503,6 +506,11 @@ const duplicateBlock = (id) => {
             </div>
             {selectedBlock.type === "text" && (
               <>
+            <FontSelector
+              selectedFont={selectedBlock?.fontFamily || "Inter"}
+              onChange={(font) => updateBlock(selectedBlock.id, "fontFamily", font)}
+            />
+
                 <input onPointerDown={(e) => e.stopPropagation()} type="color" value={selectedBlock.color} onChange={(e) => updateBlock(selectedBlock.id, "color", e.target.value)} />
                 <div className="flex items-center gap-2">
                   <label className="text-sm text-gray-600">Font</label>
@@ -569,7 +577,13 @@ const duplicateBlock = (id) => {
               <>
                 <input onPointerDown={(e) => e.stopPropagation()} type="color" value={selectedBlock.color} onChange={(e) => updateBlock(selectedBlock.id, "color", e.target.value)} />
                 <input onPointerDown={(e) => e.stopPropagation()} type="text" value={selectedBlock.label} onChange={(e) => updateBlock(selectedBlock.id, "label", e.target.value)} className="border rounded p-1" />
+              <FontSelector
+              selectedFont={selectedBlock?.fontFamily || "Inter"}
+              onChange={(font) => updateBlock(selectedBlock.id, "fontFamily", font)}
+            />
+
               </>
+              
             )}
             {selectedBlock.type === "image" && (
               <>
@@ -804,17 +818,18 @@ const duplicateBlock = (id) => {
               >
               
                 {/* TEXT */}
-{block.type === "text" && (
+                {block.type === "text" && (
   <div
     onClick={(e) => {
       e.stopPropagation();
       setSelectedBlockId(block.id);
     }}
     style={{
+      fontFamily: block.fontFamily || "Inter, sans-serif",
       textAlign: block.textAlign,
       fontWeight: block.bold ? "bold" : "normal",
       fontSize: block.fontSize || 16,
-      fontFamily: block.fontFamily || "Inter, sans-serif",
+      fontFamily: block.fontFamily || "Inter",
       color: block.color || "#000",
       width: typeof block.width === "number" ? block.width : block.width,
       height: block.height === "auto" ? "auto" : block.height,
@@ -843,7 +858,7 @@ const duplicateBlock = (id) => {
   >
     {block.content || "Click to edit text..."}
   </div>
-)}
+                )}
 
                 {/* IMAGE */}
                 {block.type === "image" && (
@@ -872,11 +887,17 @@ const duplicateBlock = (id) => {
                         <div onPointerDown={(e) => startResizing(e, block.id)} className="absolute bottom-0 right-0 w-3 h-3 bg-blue-800 rounded-full" style={{ transform: "translate(50%,50%)", cursor: "se-resize" }} />
                       </>
                     )}
-                    <button onPointerDown={(e) => e.stopPropagation()} style={{ backgroundColor: block.color || "#06276eff" }} className="w-full h-full text-white font-semibold rounded shadow-md">{block.label}</button>
+                    <button 
+                     onPointerDown={(e) => e.stopPropagation()} 
+                     style={{
+                       backgroundColor: block.color || "#06276eff", 
+                      fontFamily: block.fontFamily || "Inter, sans-serif",
+                     }} 
+                     className="w-full h-full text-white font-semibold rounded shadow-md">{block.label}</button>
                   </div>
                 )}
               </DraggableBlock>
-            ))}
+              ))}
 
             
             {/* FOOTER — static, always bottom */}
