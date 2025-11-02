@@ -2,6 +2,7 @@ import React, { useState , useEffect} from "react";
 import DraggableBlock from "./dragg";
 import NavbarBlock from "./BuiltinNav";
 import FontSelector from "./FontSelector";
+import FormBlock from "./FormBlock";
 import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor } from "@dnd-kit/core";
 import { Type, Image as ImageIcon, MousePointerClick, Navigation, LayoutTemplate } from "lucide-react";
 
@@ -11,7 +12,13 @@ export default function Builder() {
     const saved = localStorage.getItem("builderBlocks");
     return saved ? JSON.parse(saved) : [];
   });
-  const [canvasHeight, setCanvasHeight] = useState(800);
+const [canvasHeight, setCanvasHeight] = useState(
+  () => Number(localStorage.getItem("canvasHeight")) || 1200
+);
+
+useEffect(() => {
+  localStorage.setItem("canvasHeight", canvasHeight);
+}, [canvasHeight]);
 
 
   const [bgColor, setBgColor] = useState(() => localStorage.getItem("builderBgColor") || "#ffffff");
@@ -60,6 +67,36 @@ export default function Builder() {
   const addBlock = (type) => {
   const id = String(Date.now());
 
+if (type === "form") {
+  const id = String(Date.now()); 
+
+  const newForm = {
+    id, // ✅ use the same one
+    type: "form",
+     x: 100,
+     y: 100,
+    width: 400,
+    height: 250,
+    fields: [
+      { id: 1, label: "Name", type: "text", value: "" },
+      { id: 2, label: "Email", type: "email", value: "" },
+      { id: 3, label: "Message", type: "textarea", value: "" },
+    ],
+    buttonText: "Send",
+    buttonColor : "#06276eff",
+    color: "#333",
+    bgColor: "#fff",
+    btnTextColor: "#ffffff",
+    Bold: false,
+    btnFontSize: 14,
+    isEditing: false,
+  };
+
+  setBlocks((prev) => [...prev, newForm]);
+  setSelectedBlockId(id);
+  return; 
+}
+
   //  If it's a navbar, handle it first and return
   if (type === "navbar") {
     const hasNavbar = blocks.some(b => b.type === "navbar");
@@ -95,7 +132,6 @@ export default function Builder() {
     setSelectedBlockId(id);
     return; //  stop here so no second block is added
   }
-
   //  Otherwise, handle normal blocks (text, image, button)
   const newBlock = {
     id,
@@ -272,6 +308,31 @@ export default function Builder() {
   // remove any editor-only UI (handles, outlines, buttons, etc.)
   clone.querySelectorAll("[data-editor-ui], .resize-handle, .selected-border, .editor-overlay").forEach(el => el.remove());
 
+
+   // 1️⃣ Get all unique fonts from your blocks
+  const usedFonts = [
+    ...new Set(
+      blocks
+        .map((block) => block.fontFamily)
+        .filter(Boolean) // remove null/undefined
+    ),
+  ];
+
+  // 2️⃣ Build the Google Fonts link
+  const fontQuery = usedFonts
+    .map((font) => `family=${font.replace(/\s+/g, "+")}`)
+    .join("&");
+
+  const googleFontsLink = `<link href="https://fonts.googleapis.com/css2?${fontQuery}&display=swap" rel="stylesheet">`;
+
+  // 3️⃣ Convert your blocks into HTML (however you already do it)
+  const pageContent = blocks
+    .map(
+      (block) =>
+        `<div style="font-family: '${block.fontFamily}', sans-serif;">${block.content}</div>`
+    )
+    .join("\n");
+
   // build a clean HTML document
   const fullHtml = `
 <!doctype html>
@@ -279,8 +340,7 @@ export default function Builder() {
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Exported Landing Page</title>
-
+ ${googleFontsLink}<title>Exported Landing Page</title>
 <!-- tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
 
@@ -313,7 +373,7 @@ export default function Builder() {
   a.click();
   URL.revokeObjectURL(url);
  };
-const duplicateBlock = (id) => {
+ const duplicateBlock = (id) => {
   setBlocks((prev) => {
     const index = prev.findIndex((b) => b.id === id);
     if (index === -1) return prev;
@@ -334,144 +394,188 @@ const duplicateBlock = (id) => {
     updated.splice(index + 1, 0, duplicated);
     return updated;
   });
-};
+ };
 
 
 
   return (
     <>
-     {/* navbar */}
-    <div className="flex items-center justify-between p-4 bg-pink-50 sticky top-0 z-50">
+      {/* Navbar */}
+      <nav className="flex items-center justify-between px-6 py-3 bg-white shadow-md sticky top-0 z-50 border-b border-pink-100">
+  {/* Left Section — Logo / App Name */}
+  <div className="flex items-center space-x-2">
+    <span className="text-pink-400  text-xl font-semibold tracking-wide">
+      Landing<span className="text-blue-900">Forge</span>
+    </span>
+  </div>
 
-        <button
-          style={{
-            display : !isPreview ? "none" : "block" ,
-          }}
-          onClick={() => { exportLandingPage(); }}
-          className="bg-pink-400  text-white px-4 py-2 rounded-md hover:bg-pink-500 transition"
-        >
-          Export Page
-        </button>
-         <button
-          onClick={() => setIsPreview(!isPreview)}
-          className=" ml-auto bg-pink-400 text-white  px-4 py-2 rounded-md hover:bg-pink-500 transition"
-        >
-          {isPreview ? "Exit Preview" : "Preview"}
-        </button>
+  {/* Middle Section — Navigation Links */}
+  <div className="hidden md:flex items-center space-x-6">
+    <button className="text-gray-600 hover:text-pink-500 transition">
+      Dashboard
+    </button>
+    <button className="text-gray-600 hover:text-pink-500 transition">
+      My Pages
+    </button>
+    <button className="text-gray-600 hover:text-pink-500 transition">
+      Templates
+    </button>
+    <button className="text-gray-600 hover:text-pink-500 transition">
+      Analytics
+    </button>
+  </div>
+
+  {/* Right Section — Actions */}
+  <div className="flex items-center space-x-3">
+    {/* Export Button (only visible in preview mode) */}
+    {isPreview && (
+      <button
+        onClick={exportLandingPage}
+        className="bg-pink-400  text-white px-4 py-2 rounded-md hover:bg-pink-600 transition"
+      >
+        Export
+      </button>
+    )}
+
+    {/* Preview Toggle */}
+    <button
+      onClick={() => setIsPreview(!isPreview)}
+      className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800 transition"
+    >
+      {isPreview ? "Exit Preview" : "Preview"}
+    </button>
+
+    {/* User Profile Dropdown (placeholder for now) */}
+    <div className="relative">
+      <button className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-full hover:bg-gray-200 transition">
+        <img
+          src="https://i.pravatar.cc/30"
+          alt="User"
+          className="w-6 h-6 rounded-full"
+        />
+        <span className="hidden md:inline text-sm text-gray-700">You</span>
+      </button>
     </div>
+  </div>
+      </nav>
+
+
     {/* builder */}
     <div className="min-h-screen flex bg-pink-100" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
-    {/* sidebar toggle btn */}
-    <button
+
+      {/* Sidebar */}
+      <div
   style={{
     display: isPreview ? "none" : "block",
+    overflowY: "auto",
+    scrollbarWidth: "thin",
+    scrollbarColor: "#f9a8d4 transparent",
   }}
-  onClick={() => setSidebarOpen(!sidebarOpen)}
-  className={`fixed top-10 -translate-y-1/2 left-3 z-50 bg-pink-400 text-white 
-              p-2 rounded-full shadow-md hover:bg-pink-500 transition-all duration-300
-              ${sidebarOpen ? "translate-x-[15rem]" : "translate-x-0"}`}
-  title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+  className={`fixed left-0 top-[70px] h-[calc(100vh-70px)] 
+  bg-pink-50/80 backdrop-blur-lg border-r border-pink-100 
+  p-6 shadow-md transform transition-transform duration-300
+  ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} w-64`}
 >
-  {sidebarOpen ? "⟨" : "⟩"}
-    </button>
-    {/* Sidebar */}
-    <div
-    style={{
-      display : isPreview ? "none" : "block" ,
-      overflowY : "auto",
-      scrollbarWidth: "thin",
-      scrollbarColor: "#f9a8d4 transparent " ,
-
-    }}
-  className={`fixed top-0 left-0  h-screen bg-pink-50/80  backdrop-blur-lg border-r border-pink-100 p-6 shadow-md transform transition-transform duration-300 ${
-    sidebarOpen ? "translate-x-0" : "-translate-x-full"
-  } w-62 pt-[70px]`}
->  
   <h2 className="text-xl font-bold mb-6 text-blue-900">🎨 Blocks</h2>
 
-  <button
-    className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl mb-3 transition-all shadow-sm"
-    onClick={() => addBlock("text")}
-  >
-    <Type className="w-5 h-5 text-gray-700" />
-    Add Text
-  </button>
+  <div className="space-y-3">
+    <button
+      className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl transition-all shadow-sm"
+      onClick={() => addBlock("text")}
+    >
+      <Type className="w-5 h-5 text-gray-700" />
+      Add Text
+    </button>
 
-  <button
-    className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl mb-3 transition-all shadow-sm"
-    onClick={() => addBlock("image")}
-  >
-    <ImageIcon className="w-5 h-5 text-gray-700" />
-    Add Image
-  </button>
+    <button
+      className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl transition-all shadow-sm"
+      onClick={() => addBlock("image")}
+    >
+      <ImageIcon className="w-5 h-5 text-gray-700" />
+      Add Image
+    </button>
 
-  <button
-    className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl mb-3 transition-all shadow-sm"
-    onClick={() => addBlock("button")}
-  >
-    <MousePointerClick className="w-5 h-5 text-gray-700" />
-    Add Button
-  </button>
+    <button
+      className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl transition-all shadow-sm"
+      onClick={() => addBlock("button")}
+    >
+      <MousePointerClick className="w-5 h-5 text-gray-700" />
+      Add Button
+    </button>
 
-  <button
-    className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl mb-3 transition-all shadow-sm"
-    onClick={() => addBlock("navbar")}
-  >
-    <Navigation className="w-5 h-5 text-gray-700" />
-    Add Navbar
-  </button>
+    <button
+      className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl transition-all shadow-sm"
+      onClick={() => addBlock("form")}
+    >
+      <Type className="w-5 h-5 text-gray-700" />
+      Add Form
+    </button>
 
-  <button
-    className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl mb-3 transition-all shadow-sm"
-    onClick={() => addBlock("footer")}
-  >
-    <LayoutTemplate className="w-5 h-5 text-gray-700" />
-    Add Footer
-  </button>
+    <button
+      className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl transition-all shadow-sm"
+      onClick={() => addBlock("navbar")}
+    >
+      <Navigation className="w-5 h-5 text-gray-700" />
+      Add Navbar
+    </button>
+    
 
-  <button
-    onClick={() => {
-      if (window.confirm("Clear your saved layout?")) {
-        localStorage.clear();
-        setBlocks([]);
-        setBgColor("#ffffff");
-        setNavBgColor("#f8f9fa");
-      }
-    }}
-    className="w-full bg-blue-100 text-gray-800 p-3 rounded-xl mt-6 hover:bg-gray-300 transition"
-  >
-    🧹 Reset Project
-  </button>
+    <button
+      className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl transition-all shadow-sm"
+      onClick={() => addBlock("footer")}
+    >
+      <LayoutTemplate className="w-5 h-5 text-gray-700" />
+      Add Footer
+    </button>
 
-  <div className="mt-6">
-    <h3 className="text-sm font-semibold text-gray-600 mb-2">Background</h3>
-    <input
-      type="color"
-      value={bgColor}
-      onChange={(e) => setBgColor(e.target.value)}
-      className="w-full h-10 border border-pink-200 rounded cursor-pointer bg-transparent"
-    />
+    <button
+      onClick={() => {
+        if (window.confirm("Clear your saved layout?")) {
+          localStorage.clear();
+          setBlocks([]);
+          setBgColor("#ffffff");
+          setNavBgColor("#f8f9fa");
+        }
+      }}
+      className="w-full bg-blue-100 text-gray-800 p-3 rounded-xl mt-6 hover:bg-gray-300 transition"
+    >
+      🧹 Reset Project
+    </button>
   </div>
 
-  <div className="mt-6">
-    <h3 className="text-sm font-semibold text-gray-600 mb-2">Navbar Background</h3>
-    <input
-      type="color"
-      value={navBgColor}
-      onChange={(e) => setNavBgColor(e.target.value)}
-      className="w-full h-10 border border-pink-200 rounded cursor-pointer bg-transparent"
-    />
-  </div>
-    <div className="mt-6">
-    <h3 className="text-sm font-semibold text-gray-600 mb-2">Footer Background</h3>
-    <input
-      type="color"
-      value={footerBG}
-      onChange={(e) => setFooterBG(e.target.value)}
-      className="w-full h-10 border border-pink-200 rounded cursor-pointer bg-transparent"
-    />
-  </div>
+  {/* Background Settings */}
+  <div className="mt-6 space-y-6">
+    <div>
+      <h3 className="text-sm font-semibold text-gray-600 mb-2">Body Background</h3>
+      <input
+        type="color"
+        value={bgColor}
+        onChange={(e) => setBgColor(e.target.value)}
+        className="w-full h-10 border border-pink-200 rounded cursor-pointer bg-transparent"
+      />
     </div>
+
+    <div>
+      <h3 className="text-sm font-semibold text-gray-600 mb-2">Navbar Background</h3>
+      <input
+        type="color"
+        value={navBgColor}
+        onChange={(e) => setNavBgColor(e.target.value)}
+        className="w-full h-10 border border-pink-200 rounded cursor-pointer bg-transparent"
+      />
+    </div>
+
+    <div>
+      <h3 className="text-sm font-semibold text-gray-600 mb-2">Footer Background</h3>
+      <input
+        type="color"
+        value={footerBG}
+        onChange={(e) => setFooterBG(e.target.value)}
+        className="w-full h-10 border border-pink-200 rounded cursor-pointer bg-transparent"
+      />
+    </div>
+  </div>
+      </div>
 
       
       {/* start building */}
@@ -731,6 +835,66 @@ const duplicateBlock = (id) => {
     </button>
   </>
             )}
+            {selectedBlock?.type === "form" && (
+              <>
+    
+              <div className="space-y-2">
+                {/* add field */}
+                <button
+      onClick={() =>
+        updateBlock(selectedBlock.id, "fields", [
+          ...selectedBlock.fields,
+          { id: Date.now(), label: "New Field", type: "text", value: "" },
+        ])
+      }
+      className="bg-gray-800 text-white px-2 py-1 rounded"
+    >
+      + Add Field
+                </button>
+              </div>
+              {/* btnfontsize */}
+                <div className="flex items-center flex-col">
+      <input
+        onPointerDown={(e) => e.stopPropagation()}
+        type="number"
+        min={1}
+        value={selectedBlock.btnFontSize || 16}
+        onChange={(e) => updateBlock(selectedBlock.id, "btnFontSize",Number(e.target.value))}
+        className="border rounded p-1 w-16"
+      />
+      <label className="text-sm text-gray-700">cta</label>
+                </div>
+                
+                {/* button background */}
+                <div className="flex items-center flex-col">
+      <input
+        type="color"
+        value={selectedBlock.buttonColor}
+        onChange={(e) => updateBlock(selectedBlock.id, "buttonColor", e.target.value)}
+      />
+      <label className="text-sm text-gray-700">Btn BG</label>
+                </div>
+                 {/* btn text color */}
+                <div className="flex items-center flex-col">
+      <input
+        type="color"
+        value={selectedBlock.btnTextColor}
+        onChange={(e) => updateBlock(selectedBlock.id, "btnTextColor", e.target.value)}
+      />
+      <label className="text-sm text-gray-700">Btn Text</label>
+                </div>
+                {/* bold toggle */}
+                <button
+      onClick={() =>
+         updateBlock(selectedBlock.id, "Bold", !selectedBlock.Bold
+         )}
+      className={`px-2 py-1 border rounded ${selectedBlock.Bold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
+    >
+      <b>B</b> 
+                </button>
+              </>
+            )}
+
             <button onClick={() => duplicateBlock(selectedBlock.id)}
             className="px-2 py-1 border rounded-lg transition-all duration-150 hover:bg-gray-100"
             >
@@ -752,6 +916,31 @@ const duplicateBlock = (id) => {
 
           </div>
         )}
+
+        {/* Canvas Height Toolbar (scrolls with the page) */}
+           {!isPreview && (
+    <div
+      className=" mt-4 ml-75 bg-white/80 backdrop-blur-md border border-pink-100 shadow-sm px-4 py-2 rounded-xl flex justify-center items-center gap-3"
+      style={{ transition: "all 0.3s ease" ,
+        width : "23%",
+      }}
+    >
+      <label className="text-sm font-medium text-gray-700">
+        Canvas Height:
+      </label>
+
+      <input
+        type="number"
+        value={canvasHeight}
+        onChange={(e) => setCanvasHeight(Number(e.target.value))}
+        className="w-24 border border-pink-200 rounded p-1 text-center focus:ring-2 focus:ring-pink-300"
+        min="400"
+        step="100"
+      />
+
+      <span className="text-gray-600 text-sm">px</span>
+    </div>
+           )}
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
           <div 
           style={{
@@ -760,16 +949,16 @@ const duplicateBlock = (id) => {
           width : "100%",
           overflow: "visible" ,
           backgroundColor: bgColor || "#fff",
-          height :"1900px",
-          // minHeight: `${canvasHeight}px` || "1200px",
+          minHeight: `${canvasHeight}px` || "1200px",
+          transition: "height 0.3s ease",          
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between", // footer sticks to bottom
           flexGrow: 1,
           }}
           id="page-canvas" 
-          className={`canvas-area mx-auto relative origin-top transition-transform duration-300 rounded-xl border border-gray-300 shadow-inner p-6 
-          ${sidebarOpen && !isPreview ? "ml-31" : "ml-0"}`}>
+          className={`canvas-area mt-1 mx-auto relative origin-top transition-transform duration-300 rounded-xl border border-gray-300 shadow-inner p-6 
+          ${!isPreview ? "ml-29" : "ml-0"}`}>
 
 
             {/* NAVBAR (non-draggable, always on top) */}
@@ -896,6 +1085,100 @@ const duplicateBlock = (id) => {
                      className="w-full h-full text-white font-semibold rounded shadow-md">{block.label}</button>
                   </div>
                 )}
+
+                {/* form */}
+                {block.type === "form" && (
+                   <FormBlock
+    {...block}
+    selected={selectedBlockId === block.id}
+    style={{
+      background: block.bgColor,
+      color: block.color,
+      buttonColor: block.buttonColor,
+      btnTextColor: block.btnTextColor,
+      btnFontSize: block.btnFontSize,
+      width: block.width,
+      height: block.height,
+    }}
+    onChange={updateBlock}
+    onClick={(e) => {
+      e.stopPropagation();
+      setSelectedBlockId(block.id);
+    }}
+                  />
+  // <div
+  //   className="p-4 border rounded-lg"
+  //   style={{
+  //     background: block.bgColor,
+  //     color: block.color,
+  //     textAlign: "left",
+  //     width : block.width,
+  //     height : block.height,
+  //   }}
+  //   onClick={(e) => {
+  //     e.stopPropagation();
+  //     setSelectedBlockId(block.id);
+  //   }}
+  //   onDoubleClick={() => updateBlock(block.id, "isEditing", !block.isEditing)}
+  // >
+  //   {selectedBlockId === block.id && (
+  //                     <>
+  //                       <div onPointerDown={(e) => startResizing(e, block.id)} className="absolute bottom-0 right-0 w-3 h-3 bg-blue-800 rounded-full" style={{ transform: "translate(50%,50%)", cursor: "se-resize" }} />
+  //                     </>
+  //   )}
+  //   <form
+  //     onSubmit={(e) => e.preventDefault()}
+  //     className="flex flex-col space-y-3"
+  //   >
+  //     {block.fields.map((field) => (
+  //       <div key={field.id} className="flex flex-col">
+  //         {block.isEditing ? (
+  //           <input
+  //             type="text"
+  //             value={field.label}
+  //             onChange={(e) =>
+  //               updateBlock(block.id, "fields", block.fields.map((f) =>
+  //                 f.id === field.id ? { ...f, label: e.target.value } : f
+  //               ))
+  //             }
+  //             className="border p-1 text-sm rounded"
+  //           />
+  //         ) : (
+  //           <label className="text-sm font-medium mb-1">{field.label}</label>
+  //         )}
+  //         {field.type === "textarea" ? (
+  //           <textarea className="border p-2 rounded"></textarea>
+  //         ) : (
+  //           <input type={field.type} className="border p-2 rounded" />
+  //         )}
+  //       </div>
+  //     ))}
+
+  //     {block.isEditing ? (
+  //       <input
+  //         type="text"
+  //         value={block.buttonText}
+  //         onChange={(e) => updateBlock(block.id, "buttonText", e.target.value)}
+  //         className="border p-1 text-sm rounded"
+  //       />
+  //     ) : (
+  //       <button
+  //       style={{
+  //         background : block.buttonColor,
+  //         fontSize : block.btnFontSize,
+  //         color : block.btnTextColor,
+  //        fontWeight: block.Bold ? "bold" : "normal",
+  //       }}
+  //         type="submit"
+  //         className="bg-pink-500 text-white px-3 py-1 rounded-lg hover:bg-pink-600"
+  //       >
+  //         {block.buttonText}
+  //       </button>
+  //     )}
+  //   </form>
+  // </div>
+                )}
+
               </DraggableBlock>
               ))}
 

@@ -20,6 +20,8 @@ const FontSelector = ({ selectedFont, onChange }) => {
           if (data.items) {
             setFonts(data.items);
             localStorage.setItem("textfonts", JSON.stringify(data.items));
+            
+          
           }
           setLoading(false);
         })
@@ -49,7 +51,6 @@ const FontSelector = ({ selectedFont, onChange }) => {
 
   return (
     <div className="flex flex-col space-y-1">
-      <label className="text-sm text-gray-600">Font Family</label>
       <select
         value={selectedFont}
         onChange={(e) => onChange(e.target.value)}
@@ -61,6 +62,8 @@ const FontSelector = ({ selectedFont, onChange }) => {
           </option>
         ))}
       </select>
+      <label className="text-sm text-gray-600">Font Family</label>
+
     </div>
   );
 };

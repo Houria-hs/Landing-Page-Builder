@@ -68,7 +68,7 @@ export default function NavbarBlock({
                 style={{
                   color: block.linkColor || "#333",
                   fontSize: block.linksFontSize || "14px",
-                  fontWeight : block.linksBold ,
+                  fontWeight: block.linksBold ? "bold" : "normal",
                 }}
                 className="hover:underline"
               >
