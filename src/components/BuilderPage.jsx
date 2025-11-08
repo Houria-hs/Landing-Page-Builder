@@ -3,19 +3,33 @@ import DraggableBlock from "./dragg";
 import NavbarBlock from "./BuiltinNav";
 import FontSelector from "./FontSelector";
 import FormBlock from "./FormBlock";
+import HeroBlock from "../prebuiltSections/HeroSection";
+import AboutSection from "../prebuiltSections/AboutSection";
+import { Link } from "react-router-dom";
+import WebFont from "webfontloader";
 import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor } from "@dnd-kit/core";
-import { Type, Image as ImageIcon, MousePointerClick, Navigation, LayoutTemplate } from "lucide-react";
+import { Type, Image as ImageIcon, MousePointerClick, Navigation, LayoutTemplate, Bold } from "lucide-react";
 
 export default function Builder() {
 
-  const [blocks, setBlocks] = useState(() => {
+ const [blocks, setBlocks] = useState(() => {
     const saved = localStorage.getItem("builderBlocks");
     return saved ? JSON.parse(saved) : [];
   });
-const [canvasHeight, setCanvasHeight] = useState(
+  // saving the block to local storage 
+  useEffect(() => {
+  localStorage.setItem("builderBlocks", JSON.stringify(blocks));
+  }, [blocks]);
+//  Load last used font globally at app start
+  useEffect(() => {
+    const savedFont = localStorage.getItem("selectedFont");
+    if (savedFont) {
+      WebFont.load({ google: { families: [savedFont] } });
+    }
+  }, []);
+ const [canvasHeight, setCanvasHeight] = useState(
   () => Number(localStorage.getItem("canvasHeight")) || 1200
 );
-
 useEffect(() => {
   localStorage.setItem("canvasHeight", canvasHeight);
 }, [canvasHeight]);
@@ -27,25 +41,17 @@ useEffect(() => {
   const [footerBG , setFooterBG] = useState(() => 
     localStorage.getItem("footerBgColor") || "#ffffff" 
   );
- 
-
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   const selectedBlock = blocks.find((b) => b.id === selectedBlockId);
-
   // preview mode
   const [isPreview, setIsPreview] = useState(false)
-
   // toggle sidebar 
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
+  // responsive preview toggle
+  const [RSpreviewMode, setRSpreviewMode] = useState("desktop");
+  // sensors for drag and drop
   const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
 
-
-
-  // saving the block to local storage 
-  useEffect(() => {
-  localStorage.setItem("builderBlocks", JSON.stringify(blocks));
-  }, [blocks]);
   // saving the background colors to local storage as well
   useEffect(() => {
   localStorage.setItem("builderBgColor", bgColor);
@@ -58,16 +64,74 @@ useEffect(() => {
   localStorage.setItem("footerBgColor", footerBG);
   }, [footerBG]);
 
-
   // selectBlock now only needs id
   const selectBlock = (id) => {
     setSelectedBlockId(id);
   };
+
   // Add block (keeps existing behavior)
   const addBlock = (type) => {
   const id = String(Date.now());
+  
+  if (type === "hero") {
+  const id = String(Date.now());
 
-if (type === "form") {
+  const newHero = {
+    id,
+    type: "hero",
+    title: "Your Next Big Idea Starts Here 🚀",
+    subtitle:"Create stunning, responsive pages effortlessly with our builder.",
+    buttonText: "Get Started",
+    buttonColor: "#2563eb",
+    buttonTextColor: "#ffffff",
+    bgColor: "#ffffff",
+    textColor: "#111111",
+    titleBold : false,
+    subtitleBold : false,
+    titleSize : 30 ,
+    subtitleSize : 16 ,
+    fontFamily : "inter",
+    imageUrl: "https://illustrations.popsy.co/violet/online-community.svg",
+    x: 100,
+    y: 100,
+    width: 500,
+    height: 500,
+  };
+
+  setBlocks((prev) => [...prev, newHero]);
+  setSelectedBlockId(id);
+  return;
+  }
+  if (type === "aboutSection") {
+  const id = String(Date.now());
+
+  const newHero = {
+    id,
+    type: "aboutSection",
+    title: "About Us",
+    description:" Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+    buttonText: "Contact Us",
+    buttonColor: "#2563eb",
+    buttonTextColor: "#ffffff",
+    bgColor: "#ffffff",
+    textColor: "#111111",
+    titleBold : false,
+    descriptionBold : false,
+    titleSize : 30 ,
+    descriptionSize : 16 ,
+    fontFamily : "inter",
+    imageUrl: "https://illustrations.popsy.co/violet/online-community.svg",
+    x: 100,
+    y: 100,
+    width: 500,
+    height: 500,
+  };
+
+  setBlocks((prev) => [...prev, newHero]);
+  setSelectedBlockId(id);
+  return;
+  }
+  if (type === "form") {
   const id = String(Date.now()); 
 
   const newForm = {
@@ -76,7 +140,7 @@ if (type === "form") {
      x: 100,
      y: 100,
     width: 400,
-    height: 250,
+    height: 350,
     fields: [
       { id: 1, label: "Name", type: "text", value: "" },
       { id: 2, label: "Email", type: "email", value: "" },
@@ -95,9 +159,8 @@ if (type === "form") {
   setBlocks((prev) => [...prev, newForm]);
   setSelectedBlockId(id);
   return; 
-}
+  }
 
-  //  If it's a navbar, handle it first and return
   if (type === "navbar") {
     const hasNavbar = blocks.some(b => b.type === "navbar");
     if (hasNavbar) return; // prevent multiple navbars
@@ -127,6 +190,7 @@ if (type === "form") {
       ctaBold: false,
       ctaFontSize: 14,
       bgColor: "transparent",
+
     };
     setBlocks((prev) => [...prev, newNavbar]);
     setSelectedBlockId(id);
@@ -150,7 +214,7 @@ if (type === "form") {
     isEditing: false,
     textAlign: "left",
   };
-  // footer
+
   if (type === "footer") {
   const hasFooter = blocks.some((block) => block.type === "footer");
   if (hasFooter) return alert("You already have a footer 😅");
@@ -173,6 +237,8 @@ if (type === "form") {
   setBlocks((prev) => [...prev, newBlock]);
   setSelectedBlockId(id);
 };
+
+
   // Auto-expand canvas height based on block positions
   useEffect(() => {
   if (blocks.length === 0) {
@@ -447,14 +513,16 @@ if (type === "form") {
 
     {/* User Profile Dropdown (placeholder for now) */}
     <div className="relative">
-      <button className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-full hover:bg-gray-200 transition">
+      <Link 
+       to="/profile"
+      className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-full hover:bg-gray-200 transition">
         <img
           src="https://i.pravatar.cc/30"
           alt="User"
           className="w-6 h-6 rounded-full"
         />
         <span className="hidden md:inline text-sm text-gray-700">You</span>
-      </button>
+      </Link>
     </div>
   </div>
       </nav>
@@ -510,6 +578,20 @@ if (type === "form") {
       <Type className="w-5 h-5 text-gray-700" />
       Add Form
     </button>
+    <button
+      className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl transition-all shadow-sm"
+      onClick={() => addBlock("hero")}
+    >
+      <Type className="w-5 h-5 text-gray-700" />
+      Add Hero Section
+    </button>
+    <button
+      className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl transition-all shadow-sm"
+      onClick={() => addBlock("aboutSection")}
+    >
+      <Type className="w-5 h-5 text-gray-700" />
+      Add About Section
+    </button>
 
     <button
       className="w-full flex items-center gap-3 bg-pink-200 hover:bg-pink-300 text-gray-800 font-medium p-3 rounded-xl transition-all shadow-sm"
@@ -527,7 +609,7 @@ if (type === "form") {
       <LayoutTemplate className="w-5 h-5 text-gray-700" />
       Add Footer
     </button>
-
+     {/* reset project btn */}
     <button
       onClick={() => {
         if (window.confirm("Clear your saved layout?")) {
@@ -614,8 +696,9 @@ if (type === "form") {
               selectedFont={selectedBlock?.fontFamily || "Inter"}
               onChange={(font) => updateBlock(selectedBlock.id, "fontFamily", font)}
             />
-
+                {/* textcolor */}
                 <input onPointerDown={(e) => e.stopPropagation()} type="color" value={selectedBlock.color} onChange={(e) => updateBlock(selectedBlock.id, "color", e.target.value)} />
+                {/* fonstise */}
                 <div className="flex items-center gap-2">
                   <label className="text-sm text-gray-600">Font</label>
                   <input
@@ -628,6 +711,7 @@ if (type === "form") {
                   />
                 </div>
                 <textarea onPointerDown={(e) => e.stopPropagation()} value={selectedBlock.content} onChange={(e) => updateBlock(selectedBlock.id, "content", e.target.value)} className="border rounded p-1" />
+               {/* bold */}
                 <button
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={() => updateBlock(selectedBlock.id, "bold", !selectedBlock.bold)}
@@ -637,6 +721,7 @@ if (type === "form") {
                 >
                   <b>B</b>
                 </button>
+                {/* alignment */}
                 <div className="flex items-center gap-2">
   <button
     onPointerDown={(e) => e.stopPropagation()}
@@ -673,7 +758,7 @@ if (type === "form") {
   >
     ➡
   </button>
-</div>
+                </div>
 
               </>
             )}
@@ -781,6 +866,7 @@ if (type === "form") {
     </div>
 
     {/* bold */}
+
     {/* logo */}
     <button
       onClick={() =>
@@ -839,18 +925,7 @@ if (type === "form") {
               <>
     
               <div className="space-y-2">
-                {/* add field */}
-                <button
-      onClick={() =>
-        updateBlock(selectedBlock.id, "fields", [
-          ...selectedBlock.fields,
-          { id: Date.now(), label: "New Field", type: "text", value: "" },
-        ])
-      }
-      className="bg-gray-800 text-white px-2 py-1 rounded"
-    >
-      + Add Field
-                </button>
+
               </div>
               {/* btnfontsize */}
                 <div className="flex items-center flex-col">
@@ -892,8 +967,65 @@ if (type === "form") {
     >
       <b>B</b> 
                 </button>
+                {/* add field */}
+                <button
+      onClick={() =>
+        updateBlock(selectedBlock.id, "fields", [
+          ...selectedBlock.fields,
+          { id: Date.now(), label: "New Field", type: "text", value: "" },
+        ])
+      }
+      className="bg-gray-800 text-white px-2 py-2 rounded w-30"
+    >
+      + Add Field
+                </button>
               </>
             )}
+            {selectedBlock?.type === "hero" && (
+              // bold
+              <>
+            <FontSelector
+              selectedFont={selectedBlock?.fontFamily || "Inter"}
+              onChange={(font) => updateBlock(selectedBlock.id, "fontFamily", font)}
+            />
+              <button
+                onClick={() => updateBlock(selectedBlock.id, "titleBold", !selectedBlock.titleBold)}
+                className={`px-2 py-1 border rounded ${selectedBlock.titleBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
+              >
+                <b>B</b> Title
+              </button>
+              <button
+                onClick={() => updateBlock(selectedBlock.id, "subtitleBold", !selectedBlock.subtitleBold)}
+                className={`px-2 py-1 border rounded ${selectedBlock.subtitleBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
+              >
+                <b>B</b> Subtitle
+              </button>
+              {/* text fontsize */}
+               <div className="flex items-center flex-col">
+                <input
+                 onPointerDown={(e) => e.stopPropagation()}
+                  type="number"
+                  min={1}
+                  value={selectedBlock.titleSize || 30}
+                  onChange={(e) => updateBlock(selectedBlock.id, "titleSize",Number(e.target.value))}
+                  className="border rounded p-1 w-16"
+                />
+                <label className="text-sm text-gray-700">Title</label>
+              </div>
+              <div className="flex items-center flex-col">
+                <input
+                 onPointerDown={(e) => e.stopPropagation()}
+                  type="number"
+                  min={1}
+                  value={selectedBlock.subtitleSize || 16}
+                  onChange={(e) => updateBlock(selectedBlock.id, "subtitleSize",Number(e.target.value))}
+                  className="border rounded p-1 w-16"
+                />
+                <label className="text-sm text-gray-700">Subtitle</label>
+              </div>
+             </>
+            )}
+            
 
             <button onClick={() => duplicateBlock(selectedBlock.id)}
             className="px-2 py-1 border rounded-lg transition-all duration-150 hover:bg-gray-100"
@@ -916,16 +1048,16 @@ if (type === "form") {
 
           </div>
         )}
-
-        {/* Canvas Height Toolbar (scrolls with the page) */}
-           {!isPreview && (
+        {/* height and resposniveness toolbar  */}
+        <div style={{width : "60%"}}
+className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
+  {/* Canvas Height Toolbar */}
+  {!isPreview && (
     <div
-      className=" mt-4 ml-75 bg-white/80 backdrop-blur-md border border-pink-100 shadow-sm px-4 py-2 rounded-xl flex justify-center items-center gap-3"
-      style={{ transition: "all 0.3s ease" ,
-        width : "23%",
-      }}
+      className="bg-white/80 backdrop-blur-md border border-pink-100 shadow-sm px-4 py-2 rounded-xl flex items-center gap-3 transition-all duration-300"
+      style={{ width: "auto" }}
     >
-      <label className="text-sm font-medium text-gray-700">
+      <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
         Canvas Height:
       </label>
 
@@ -940,13 +1072,67 @@ if (type === "form") {
 
       <span className="text-gray-600 text-sm">px</span>
     </div>
-           )}
+  )}
+
+  {/* Responsive Toggle Toolbar */}
+  {!isPreview && (
+  <div className="flex items-center justify-center gap-2 bg-white/80 backdrop-blur-md border border-gray-200 px-3 py-2 rounded-xl shadow-sm transition-all duration-300">
+    <button
+      onClick={() => setRSpreviewMode("desktop")}
+      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+        RSpreviewMode === "desktop"
+          ? "bg-pink-100 text-pink-600"
+          : "hover:bg-gray-100 text-gray-700"
+      }`}
+    >
+      🖥️ Desktop
+    </button>
+
+    <button
+      onClick={() => setRSpreviewMode("tablet")}
+      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+        RSpreviewMode === "tablet"
+          ? "bg-pink-100 text-pink-600"
+          : "hover:bg-gray-100 text-gray-700"
+      }`}
+    >
+      💻 Tablet
+    </button>
+
+    <button
+      onClick={() => setRSpreviewMode("mobile")}
+      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+        RSpreviewMode === "mobile"
+          ? "bg-pink-100 text-pink-600"
+          : "hover:bg-gray-100 text-gray-700"
+      }`}
+    >
+      📱 Mobile
+    </button>
+  </div>
+  )}
+
+        </div>
+        {/* where the drag and drop is possible */}
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
           <div 
           style={{
           transform: sidebarOpen && !isPreview ? "scale(0.7)" : "scale(1)" ,
           transformOrigin: "top center",
-          width : "100%",
+          // width : "100%",
+           width:
+        RSpreviewMode === "desktop"  
+        ? "100%"
+        : RSpreviewMode === "tablet"
+        ? "768px"
+        : "375px",
+         marginLeft: isPreview
+        ? "0"
+        : RSpreviewMode === "tablet"
+        ? "12rem"
+        : RSpreviewMode === "mobile"
+        ? "15.5rem"
+        : "7.4rem",
           overflow: "visible" ,
           backgroundColor: bgColor || "#fff",
           minHeight: `${canvasHeight}px` || "1200px",
@@ -1088,12 +1274,21 @@ if (type === "form") {
 
                 {/* form */}
                 {block.type === "form" && (
-                   <FormBlock
+                  <div
+                      onMouseDown={(e) => e.stopPropagation()}
+
+  onClick={(e) => {
+    e.stopPropagation();
+    setSelectedBlockId(block.id);
+  }}
+>
+  <FormBlock
     {...block}
     selected={selectedBlockId === block.id}
     style={{
       background: block.bgColor,
       color: block.color,
+      Bold : block.Bold ,
       buttonColor: block.buttonColor,
       btnTextColor: block.btnTextColor,
       btnFontSize: block.btnFontSize,
@@ -1101,84 +1296,91 @@ if (type === "form") {
       height: block.height,
     }}
     onChange={updateBlock}
-    onClick={(e) => {
-      e.stopPropagation();
-      setSelectedBlockId(block.id);
-    }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedBlockId(block.id);
+              }}
                   />
-  // <div
-  //   className="p-4 border rounded-lg"
-  //   style={{
-  //     background: block.bgColor,
-  //     color: block.color,
-  //     textAlign: "left",
-  //     width : block.width,
-  //     height : block.height,
-  //   }}
-  //   onClick={(e) => {
-  //     e.stopPropagation();
-  //     setSelectedBlockId(block.id);
-  //   }}
-  //   onDoubleClick={() => updateBlock(block.id, "isEditing", !block.isEditing)}
-  // >
-  //   {selectedBlockId === block.id && (
-  //                     <>
-  //                       <div onPointerDown={(e) => startResizing(e, block.id)} className="absolute bottom-0 right-0 w-3 h-3 bg-blue-800 rounded-full" style={{ transform: "translate(50%,50%)", cursor: "se-resize" }} />
-  //                     </>
-  //   )}
-  //   <form
-  //     onSubmit={(e) => e.preventDefault()}
-  //     className="flex flex-col space-y-3"
-  //   >
-  //     {block.fields.map((field) => (
-  //       <div key={field.id} className="flex flex-col">
-  //         {block.isEditing ? (
-  //           <input
-  //             type="text"
-  //             value={field.label}
-  //             onChange={(e) =>
-  //               updateBlock(block.id, "fields", block.fields.map((f) =>
-  //                 f.id === field.id ? { ...f, label: e.target.value } : f
-  //               ))
-  //             }
-  //             className="border p-1 text-sm rounded"
-  //           />
-  //         ) : (
-  //           <label className="text-sm font-medium mb-1">{field.label}</label>
-  //         )}
-  //         {field.type === "textarea" ? (
-  //           <textarea className="border p-2 rounded"></textarea>
-  //         ) : (
-  //           <input type={field.type} className="border p-2 rounded" />
-  //         )}
-  //       </div>
-  //     ))}
-
-  //     {block.isEditing ? (
-  //       <input
-  //         type="text"
-  //         value={block.buttonText}
-  //         onChange={(e) => updateBlock(block.id, "buttonText", e.target.value)}
-  //         className="border p-1 text-sm rounded"
-  //       />
-  //     ) : (
-  //       <button
-  //       style={{
-  //         background : block.buttonColor,
-  //         fontSize : block.btnFontSize,
-  //         color : block.btnTextColor,
-  //        fontWeight: block.Bold ? "bold" : "normal",
-  //       }}
-  //         type="submit"
-  //         className="bg-pink-500 text-white px-3 py-1 rounded-lg hover:bg-pink-600"
-  //       >
-  //         {block.buttonText}
-  //       </button>
-  //     )}
-  //   </form>
-  // </div>
+</div>
+                   
                 )}
 
+                {/* hero section */}
+                {block.type === "hero" && (
+                  <div
+                   onMouseDown={(e) => e.stopPropagation()}
+                   onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedBlockId(block.id);
+                  }}
+                    
+
+                  
+                    style={{
+                      // background: block.bgColor,
+                      // color: block.color,
+                      width: block.width,
+                      height: block.height,
+                    }}
+                  >
+                    <HeroBlock
+                      {...block}
+                      selected={selectedBlockId === block.id}
+                      onChange={updateBlock}
+                      titleBold = {block.titleBold}
+                      titleSize = {block.titleSize}
+                      subtitleBold = {block.subtitleBold}
+                      subtitleSize = {block.subtitleSize}
+                      fontFamily = {block.fontFamily}
+
+                      style={{
+                      // background: block.bgColor,
+                      // color: block.color,
+                      position: "relative",
+                      width: block.width,
+                      height: block.height,
+                      fontFamily: block.fontFamily || localStorage.getItem("selectedFont") || "Inter",
+
+                    }}
+                    />
+                  </div>
+                )}
+                {/* about section */}
+                {block.type === "aboutSection" && (
+                  <div
+                  onMouseDown={(e) => e.stopPropagation()}
+                   onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedBlockId(block.id);
+                  }}
+                    style={{
+                      // background: block.bgColor,
+                      // color: block.color,
+                      width: block.width,
+                      height: block.height,
+                    }}
+                  >
+                    <AboutSection
+                      {...block}
+                      selected={selectedBlockId === block.id}
+                      // onChange={updateBlock}
+                      // titleBold = {block.titleBold}
+                      // titleSize = {block.titleSize}
+                      // subtitleBold = {block.subtitleBold}
+                      // subtitleSize = {block.subtitleSize}
+                      // fontFamily = {block.fontFamily}
+
+                      style={{
+                      // background: block.bgColor,
+                      // color: block.color,
+                      position: "relative",
+                      width: block.width,
+                      height: block.height,
+                      fontFamily: block.fontFamily || localStorage.getItem("selectedFont") || "Inter",
+                    }}
+                    />
+                  </div>
+                )}
               </DraggableBlock>
               ))}
 

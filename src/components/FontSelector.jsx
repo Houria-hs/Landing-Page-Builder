@@ -38,6 +38,8 @@ const FontSelector = ({ selectedFont, onChange }) => {
   }, []);
 
   // When the selected font changes, load it and store it
+
+
   useEffect(() => {
     if (selectedFont) {
       WebFont.load({
