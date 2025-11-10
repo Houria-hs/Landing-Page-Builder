@@ -8,18 +8,23 @@ const AboutSection = ({
   title : initialTitle,
   description : initialDescription,
   buttonText,
-  buttonColor = "#000000",
-  buttonTextColor = "#ffffff",
+  buttonColor ,
   titleBold,
+  titleColor,
   descriptionBold,
+  descriptionColor,
   titleSize,
   descriptionSize,
   fontFamily,
   imageUrl,
   width,
   height,
-  bgColor = "#ffffff",
-  textColor = "#1a1a1a",
+  buttonTextSize,
+  buttonTextColor,
+  buttonBold,
+  bgColor ,
+  textColor ,
+  isPreview,
 }) => {
   const handleChange = (field, value) => {
     if (onChange) {
@@ -145,7 +150,7 @@ const AboutSection = ({
           className={`font-bold`}
           onClick={() => setEditingTitle(true)}
           style={{ 
-            color: textColor || "#111", 
+            color: titleColor || "#111", 
             fontFamily : fontFamily || "serif",
             fontSize : titleSize || 30 ,
             fontWeight : titleBold ? "bold" : "normal",
@@ -173,10 +178,9 @@ const AboutSection = ({
           style={{
             fontWeight: descriptionBold ? "bold" : "normal",
             fontSize: descriptionSize || 16,
-            color: textColor || "#111", 
+            color: descriptionColor || "#111", 
             fontFamily : fontFamily || "serif",
             fontWeight : descriptionBold ? "bold" : "normal",
-
           }}
         >
           {description}
@@ -186,30 +190,43 @@ const AboutSection = ({
           className="self-start py-3 px-6 rounded-xl hover:opacity-80 transition"
           style={{
             backgroundColor: buttonColor,
-            color: buttonTextColor,
+            fontSize: buttonTextSize || 16,
+            fontWeight: buttonBold ? "bold" : "normal",
           }}
         >
-          {buttonText}
+           <span
+      contentEditable
+      suppressContentEditableWarning
+      onBlur={(e) =>
+        handleProjectChange(project.id, "buttonText", e.currentTarget.textContent)
+      }
+      className="outline-none"
+      style={{
+        color: buttonTextColor || "#fff",
+      }}
+    >
+      {buttonText || "Contact Us"}
+    </span>
         </button>
       </div>
 
 
       
       {/* ✏️ MINI TOOLBAR */}
-{selected && (
+
+{/*  MINI TOOLBAR */}
+{selected && !isPreview && (
   <MiniToolbar
     title="About Section Editor"
     onClick={(e) => e.stopPropagation()}
     onClose={() => onChange(id, "selected", false)}
-    onChange={handleChange}   
+    onChange={handleChange}
     fields={[
-      { name: "title", label: "Title", type: "text", value: title },
-      { name: "description", label: "description", type: "text", value: description },
-      { name: "buttonText", label: "Button Text", type: "text", value: buttonText },
       { name: "buttonColor", label: "Button Color", type: "color", value: buttonColor },
-      { name: "imageUrl", label: "Image URL", type: "text", value: imageUrl },
       { name: "bgColor", label: "Background", type: "color", value: bgColor },
-      { name: "textColor", label: "Text Color", type: "color", value: textColor },
+      { name: "buttonTextColor", label: "button text Color", type: "color", value: buttonTextColor },
+      { name: "titleColor", label: "title color", type: "color", value: titleColor },
+      { name: "descriptionColor", label: "Description text Color", type: "color", value: descriptionColor },
     ]}
   />
 )}
