@@ -8,6 +8,7 @@ const FormBlock = ({
   style,
   selected,
   onChange,
+  isPreview ,
 }) => {
     const handleLabelChange = (index, newLabel) => {
     const updated = [...fields];
@@ -54,7 +55,7 @@ return (
     </div>
 
     {/* MINI TOOLBAR (only when selected) */}
-{selected &&  (
+{selected && !isPreview && (
   <div
     className="absolute left-1/2 -translate-x-1/2 translate-y-4 w-[95%] z-[50]"
     onClick={(e) => e.stopPropagation()}
