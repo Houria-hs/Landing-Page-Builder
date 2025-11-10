@@ -5,11 +5,13 @@ import MiniToolbar from "../components/miniToolbar";
 const HeroBlock = ({
   id,
  title: initialTitle,
-subtitle :initialSubtitle,
+  subtitle :initialSubtitle,
   buttonText,
+  buttonTextSize,
   buttonColor,
   buttonTextColor,
-  imageUrl,
+  titleColor,
+  subtitleColor,
   bgColor,
   textColor,
   selected,
@@ -18,8 +20,10 @@ subtitle :initialSubtitle,
   titleBold,
   titleSize,
   subtitleBold,
+  buttonBold,
   subtitleSize,
   fontFamily,
+  isPreview,
 }) => {
   const handleChange = (field, value) => {
     onChange(id, field, value);
@@ -120,18 +124,31 @@ subtitle :initialSubtitle,
           <button
             style={{
               background: buttonColor || "#2563eb",
-              color: buttonTextColor || "#fff",
+              fontSize:   buttonTextSize,
+              fontWeight : buttonBold ? "bold" : "normal",
             }}
             className="px-6 py-2 rounded-full font-semibold transition hover:opacity-90"
           >
-            {buttonText}
+            <span
+      contentEditable
+      suppressContentEditableWarning
+      onBlur={(e) =>
+        handleProjectChange(project.id, "buttonText", e.currentTarget.textContent)
+      }
+      className="outline-none"
+      style={{
+        color: buttonTextColor || "#fff",
+      }}
+    >
+      {buttonText || "Contact Us"}
+    </span>
           </button>
         </div>
       </div>
 
 
-{/* Right side image */}
-<div className="flex flex-col items-center ml-8">
+   {/* Right side image */}
+   <div className="flex flex-col items-center ml-8">
   {image ? (
     <div className="relative flex flex-col items-center">
       <img
@@ -199,25 +216,24 @@ subtitle :initialSubtitle,
       />
     </label>
   )}
-</div>
+   </div>
 
       
 
 {/* ✏️ MINI TOOLBAR */}
-{selected && (
+{selected && !isPreview && (
   <MiniToolbar
     title="Hero Section Editor"
     onClick={(e) => e.stopPropagation()}
     onClose={() => onChange(id, "selected", false)}
+    isPreview={isPreview}
     onChange={handleChange}
     fields={[
-      { name: "title", label: "Title", type: "text", value: title },
-      { name: "subtitle", label: "Subtitle", type: "text", value: subtitle },
-      { name: "buttonText", label: "Button Text", type: "text", value: buttonText },
       { name: "buttonColor", label: "Button Color", type: "color", value: buttonColor },
-      { name: "imageUrl", label: "Image URL", type: "text", value: imageUrl },
       { name: "bgColor", label: "Background", type: "color", value: bgColor },
-      { name: "textColor", label: "Text Color", type: "color", value: textColor },
+      { name: "buttonTextColor", label: "button text Color", type: "color", value: buttonTextColor },
+      { name: "titleColor", label: "title color", type: "color", value: titleColor },
+      { name: "subtitleColor", label: "subtitle Color", type: "color", value: subtitleColor },
     ]}
   />
 )}
