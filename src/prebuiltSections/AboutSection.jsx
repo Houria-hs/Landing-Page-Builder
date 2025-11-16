@@ -7,7 +7,7 @@ const AboutSection = ({
   selected,
   title : initialTitle,
   description : initialDescription,
-  buttonText,
+  buttonText : initialButtonText,
   buttonColor ,
   titleBold,
   titleColor,
@@ -31,9 +31,9 @@ const AboutSection = ({
       onChange(id, field, value);
     }
   };
-  const [title, setTitle] = useState(initialTitle || "hero section title ");
+  const [title, setTitle] = useState(() => localStorage.getItem(`${id}-title`) || initialTitle || "About section title"); 
+  const [description, setdescription] = useState(() => localStorage.getItem(`${id}-description`) || initialDescription || "about section description");
   const [editingTitle, setEditingTitle] = useState(false);
-  const [description, setdescription] = useState(initialDescription || "hero section subtitle");
   const [editingdescription, setEditingdescription] = useState(false);
   const [selectedImage, setSelectedImage] = useState(false);
   const [image, setImage] = useState(
@@ -41,6 +41,24 @@ const AboutSection = ({
   );
   const [imgWidth, setImgWidth] = useState(width || 350);
   const [imgHeight, setImgHeight] = useState(height || 350);
+
+
+  
+    const [buttonText, setButtonText] = useState(() => localStorage.getItem(`${id}-buttonText`) || initialButtonText || "Contact Us");
+  
+  
+    // Save to localStorage whenever they change
+    useEffect(() => {
+      localStorage.setItem(`${id}-title`, title);
+    }, [title]);
+  
+    useEffect(() => {
+      localStorage.setItem(`${id}-description`, description);
+    }, [description]);
+  
+    useEffect(() => {
+      localStorage.setItem(`${id}-buttonText`, buttonText);
+    }, [buttonText]);
 
 
   //  Handle image upload
@@ -62,7 +80,7 @@ const AboutSection = ({
 
   return (
     <section
-      className="w-full py-16 px-6 md:px-12 flex flex-col md:flex-row items-center gap-12 transition-all duration-300"
+      className=" relative w-full py-16 px-6 md:px-12 flex flex-col md:flex-row items-center gap-12 transition-all duration-300"
       style={{ background: bgColor || "#ffffff",  color: textColor }}
 
     >
@@ -118,12 +136,14 @@ const AboutSection = ({
         )}
       </>
     ) : (
-      <div
-        className="w-64 h-64 bg-gray-200 flex items-center justify-center rounded-2xl cursor-pointer"
-        onClick={() => setSelectedImage(true)}
-      >
-        No image
-      </div>
+      <img src={imageUrl} alt="about us"
+      className="rounded-2xl shadow-md object-cover"
+       />
+      // <div
+      //   className="w-64 h-64 bg-gray-200 flex items-center justify-center rounded-2xl cursor-pointer"
+      //   onClick={() => setSelectedImage(true)}
+      // >
+      // </div>
     )}
   </div>
 </div>
@@ -186,28 +206,29 @@ const AboutSection = ({
           {description}
         </p>
         )}
-        <button
-          className="self-start py-3 px-6 rounded-xl hover:opacity-80 transition"
+
+        <div className="flex flex-col sm:flex-row items-center gap-3 justify-center md:justify-start mt-4">
+         
+          <button className="px-6 py-2 rounded-full font-semibold transition hover:opacity-90"
           style={{
-            backgroundColor: buttonColor,
-            fontSize: buttonTextSize || 16,
-            fontWeight: buttonBold ? "bold" : "normal",
-          }}
-        >
-           <span
-      contentEditable
-      suppressContentEditableWarning
-      onBlur={(e) =>
-        handleProjectChange(project.id, "buttonText", e.currentTarget.textContent)
-      }
-      className="outline-none"
-      style={{
-        color: buttonTextColor || "#fff",
-      }}
-    >
-      {buttonText || "Contact Us"}
-    </span>
+              background: buttonColor || "#1c398e",
+              fontSize:   buttonTextSize,
+              fontWeight : buttonBold ? "bold" : "normal",
+            }}
+          >
+          <span
+            style={{
+            color: buttonTextColor || "#fff",
+            }}
+            contentEditable
+            suppressContentEditableWarning
+            onBlur={(e) => setButtonText(e.currentTarget.textContent)}
+            className="outline-none"
+          >
+            {buttonText}
+          </span>
         </button>
+        </div>
       </div>
 
 

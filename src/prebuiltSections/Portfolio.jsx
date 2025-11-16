@@ -29,9 +29,9 @@ isPreview,
     onChange(id, field, value);
   };
     const [link, setLink] = useState("#");
-    const [title, setTitle] = useState(initialTitle || "portfolio section title ");
+    const [title, setTitle] = useState(() => localStorage.getItem(`${id}-title`) || initialTitle || "portfolio section title"); 
     const [editingTitle, setEditingTitle] = useState(false);
-    const [subtitle, setSubtitle] = useState(initialSubtitle || "portfolio section subtitle");
+    const [subtitle, setSubtitle] = useState(() => localStorage.getItem(`${id}-subtitle`) || initialSubtitle || "hero section subtitle");
     const [editingsubTitle, setEditingsubTitle] = useState(false);
     // Load from localStorage (parse JSON)
     const [projectImages, setProjectImages] = useState(() => {
@@ -41,6 +41,15 @@ isPreview,
     useEffect(() => {
       if (projectImages) localStorage.setItem("cardsImage", JSON.stringify(projectImages));
     }, [projectImages]);
+
+        // Save to localStorage whenever they change
+        useEffect(() => {
+          localStorage.setItem(`${id}-title`, title);
+        }, [title]);
+      
+        useEffect(() => {
+          localStorage.setItem(`${id}-subtitle`, subtitle);
+        }, [subtitle]);
 
 // handle image upload for each project
 const handleImageUpload = (e, projectId) => {
@@ -73,7 +82,7 @@ const handleImageUpload = (e, projectId) => {
 
   return (
     <section
-      className="w-full py-16 px-6 md:px-12 transition-all duration-300"
+      className="w-full relative py-16 px-6 md:px-12 transition-all duration-300"
       style={{ backgroundColor: bgColor, color: textColor, fontFamily }}
     >
       {/* Section Header */}
@@ -149,9 +158,9 @@ const handleImageUpload = (e, projectId) => {
       className="w-full h-full object-cover"
     />
   ) : (
-    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
-      No Image
-    </div>
+      <img src={project.image} alt="projects"
+      className="w-full h-full object-cover"
+       />
   )}
 
   {/* Hover overlay to upload image */}
@@ -199,7 +208,7 @@ const handleImageUpload = (e, projectId) => {
   <div
     className="mt-auto inline-block px-5 py-2 rounded-lg text-center text-sm font-medium bg-black text-white hover:opacity-80 transition cursor-pointer"
             style={{
-              background: buttonColor || "#2563eb",
+              background: buttonColor || "#1c398e",
               color: buttonTextColor || "#fff",
               fontSize: buttonTextSize,
               fontWeight : buttonBold ? "bold" : "normal",

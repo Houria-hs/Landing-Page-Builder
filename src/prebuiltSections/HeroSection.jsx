@@ -6,7 +6,7 @@ const HeroBlock = ({
   id,
  title: initialTitle,
   subtitle :initialSubtitle,
-  buttonText,
+  buttonText: initialButtonText,
   buttonTextSize,
   buttonColor,
   buttonTextColor,
@@ -24,6 +24,7 @@ const HeroBlock = ({
   subtitleSize,
   fontFamily,
   isPreview,
+  imageUrl,
 }) => {
   const handleChange = (field, value) => {
     onChange(id, field, value);
@@ -33,16 +34,33 @@ const HeroBlock = ({
   const [image, setImage] =  useState(() => localStorage.getItem("heroImage") || null);
   const [imgWidth, setImgWidth] = useState(350);
   const [imgHeight, setImgHeight] = useState(350);
-  const [title, setTitle] = useState(initialTitle || "hero section title ");
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [subtitle, setSubtitle] = useState(initialSubtitle || "hero section subtitle");
+  const [title, setTitle] = useState(() => localStorage.getItem(`${id}-title`) || initialTitle || "hero section title");  const [editingTitle, setEditingTitle] = useState(false);
+  const [subtitle, setSubtitle] = useState(() => localStorage.getItem(`${id}-subtitle`) || initialSubtitle || "hero section subtitle");
   const [editingsubTitle, setEditingsubTitle] = useState(false);
+
+  const [buttonText, setButtonText] = useState(() => localStorage.getItem(`${id}-buttonText`) || initialButtonText || "Contact Us");
+
+
+  // Save to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(`${id}-title`, title);
+  }, [title]);
+
+  useEffect(() => {
+    localStorage.setItem(`${id}-subtitle`, subtitle);
+  }, [subtitle]);
+
+  useEffect(() => {
+    localStorage.setItem(`${id}-buttonText`, buttonText);
+  }, [buttonText]);
+  
 
 
  //  Persist image on change
   useEffect(() => {
     if (image) localStorage.setItem("heroImage", image);
   }, [image]);
+
 
   //  Handle image upload
   const handleImageUpload = (e) => {
@@ -58,7 +76,7 @@ const HeroBlock = ({
 
   return (
     <div
-      className="relative w-full  rounded-2xl shadow-sm p-8 flex flex-col md:flex-row items-center justify-between gap-6 transition-all duration-300"
+      className="relative w-full  p-8 flex flex-col md:flex-row items-center justify-between gap-6 transition-all duration-300"
       style={{ 
         background: bgColor || "#ffffff", 
         height : style?.height ,
@@ -121,109 +139,88 @@ const HeroBlock = ({
         )}
 
         <div className="flex flex-col sm:flex-row items-center gap-3 justify-center md:justify-start mt-4">
-          <button
-            style={{
-              background: buttonColor || "#2563eb",
+         
+          <button className="px-6 py-2 rounded-full font-semibold transition hover:opacity-90"
+          style={{
+              background: buttonColor || "#1c398e",
               fontSize:   buttonTextSize,
               fontWeight : buttonBold ? "bold" : "normal",
             }}
-            className="px-6 py-2 rounded-full font-semibold transition hover:opacity-90"
           >
-            <span
-      contentEditable
-      suppressContentEditableWarning
-      onBlur={(e) =>
-        handleProjectChange(project.id, "buttonText", e.currentTarget.textContent)
-      }
-      className="outline-none"
-      style={{
-        color: buttonTextColor || "#fff",
-      }}
-    >
-      {buttonText || "Contact Us"}
-    </span>
-          </button>
+          <span
+            style={{
+            color: buttonTextColor || "#fff",
+            }}
+            contentEditable
+            suppressContentEditableWarning
+            onBlur={(e) => setButtonText(e.currentTarget.textContent)}
+            className="outline-none"
+          >
+            {buttonText}
+          </span>
+        </button>
         </div>
       </div>
 
 
-   {/* Right side image */}
-   <div className="flex flex-col items-center ml-8">
-  {image ? (
-    <div className="relative flex flex-col items-center">
-      <img
-        src={image}
-        alt="Hero"
-        style={{
-          width: `${imgWidth}px`,
-          height: `${imgHeight}px`,
-          objectFit: "cover",
-          borderRadius: "10px",
-          border: selectedImage ? "2px solid #007bff" : "none",
-          cursor: "pointer",
-        }}
-        onClick={() => setSelectedImage(!selectedImage)}
-      />
-
-      {/* Show controls ONLY if the image is selected */}
-      {selectedImage && (
-        <div className="flex flex-col gap-2 mt-3 bg-white p-3 rounded-lg shadow-md border">
-          <label className="cursor-pointer text-sm font-medium text-blue-600">
-            Change Image
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              style={{ display: "none" }}
-            />
-          </label>
-
-          <div className="flex gap-2 items-center">
-            <label className="text-sm">W:</label>
-            <input
-              type="number"
-              value={imgWidth}
-              onChange={(e) => setImgWidth(Number(e.target.value))}
-              className="w-16 border rounded p-1 text-center"
-            />
-            <label className="text-sm">H:</label>
-            <input
-              type="number"
-              value={imgHeight}
-              onChange={(e) => setImgHeight(Number(e.target.value))}
-              className="w-16 border rounded p-1 text-center"
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  ) : (
-    <label
+{/* Right side image */}
+<div className="flex flex-col items-center ml-8">
+  <div className="relative flex flex-col items-center">
+    <img
+      src={image || imageUrl || "/default.png"}
+      alt="Hero"
       style={{
+        width: `${imgWidth}px`,
+        height: `${imgHeight}px`,
+        objectFit: "cover",
+        borderRadius: "10px",
+        border: selectedImage ? "2px solid #007bff" : "none",
         cursor: "pointer",
-        background: "#007bff",
-        color: "white",
-        padding: "8px 12px",
-        borderRadius: "6px",
       }}
-    >
-      Upload Image
-      <input
-        type="file"
-        accept="image/*"
-        onChange={handleImageUpload}
-        style={{ display: "none" }}
-      />
-    </label>
-  )}
-   </div>
+      onClick={() => setSelectedImage(!selectedImage)}
+    />
+
+    {/* Show controls ONLY if the image is selected */}
+    {selectedImage && (
+      <div className="flex flex-col gap-2 mt-3 bg-white p-3 rounded-lg shadow-md border">
+        <label className="cursor-pointer text-sm font-medium text-blue-600">
+          Change Image
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            style={{ display: "none" }}
+          />
+        </label>
+
+        <div className="flex gap-2 items-center">
+          <label className="text-sm">W:</label>
+          <input
+            type="number"
+            value={imgWidth}
+            onChange={(e) => setImgWidth(Number(e.target.value))}
+            className="w-16 border rounded p-1 text-center"
+          />
+          <label className="text-sm">H:</label>
+          <input
+            type="number"
+            value={imgHeight}
+            onChange={(e) => setImgHeight(Number(e.target.value))}
+            className="w-16 border rounded p-1 text-center"
+          />
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+
 
       
 
 {/* ✏️ MINI TOOLBAR */}
 {selected && !isPreview && (
   <MiniToolbar
-    title="Hero Section Editor"
+    title="Color Editor"
     onClick={(e) => e.stopPropagation()}
     onClose={() => onChange(id, "selected", false)}
     isPreview={isPreview}
