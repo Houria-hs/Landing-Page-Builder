@@ -1,7 +1,7 @@
 import React, { useState , useEffect} from "react";
 import DraggableBlock from "./dragg";
 import NavbarBlock from "./BuiltinNav";
-import FontSelector from "./FontSelector";
+// import logo from "../imgs/logo.png"
 import FormBlock from "./FormBlock";
 import HeroBlock from "../prebuiltSections/HeroSection";
 import AboutSection from "../prebuiltSections/AboutSection";
@@ -10,9 +10,18 @@ import { Link } from "react-router-dom";
 import WebFont from "webfontloader";
 import Sidebar from "./SideBar";
 import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor } from "@dnd-kit/core";
-import { Type, Image as ImageIcon, MousePointerClick, Navigation, LayoutTemplate, Bold } from "lucide-react";
+import { getProfile } from "../services/authService";
+import NavBuilderBlock from "./builderNav";
+import GlobalToolbar from "./GlobalToolbar";
+import { positionalKeys } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+
 
 export default function Builder() {
+
+  // profile image 
+  const profileImg = localStorage.getItem("profileImg");
+
 
  const [blocks, setBlocks] = useState(() => {
     const saved = localStorage.getItem("builderBlocks");
@@ -35,6 +44,17 @@ export default function Builder() {
 useEffect(() => {
   localStorage.setItem("canvasHeight", canvasHeight);
 }, [canvasHeight]);
+
+
+// user 
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    const fetchUser = async () => {
+      const user = await getProfile();
+      setUser(user);
+    };
+    fetchUser();
+  }, []);
 
 
   const [bgColor, setBgColor] = useState(() => localStorage.getItem("builderBgColor") || "#ffffff");
@@ -69,9 +89,24 @@ useEffect(() => {
     setSelectedBlockId(id);
   };
 
+
+  const deleteField = (fieldId) => {
+  updateBlock(selectedBlock.id, "fields",
+    selectedBlock.fields.filter(field => field.id !== fieldId)
+  );
+};
+
   // Add block (keeps existing behavior)
   const addBlock = (type) => {
   const id = String(Date.now());
+
+    let newY = 100;
+
+  if (blocks.length > 0) {
+    const last = blocks[blocks.length - 1];
+    newY = last.y + (last.height || 300) + 30;
+  }
+
   
   if (type === "hero") {
   const id = String(Date.now());
@@ -84,7 +119,7 @@ useEffect(() => {
     buttonText: "Get Started",
     buttonColor: "#2563eb",
     buttonTextColor: "#ffffff",
-    bgColor: "#ffffff",
+    bgColor: "transparent",
     titleColor : "#111111",
     subtitleColor : "#111111",
     textColor: "#111111",
@@ -95,10 +130,10 @@ useEffect(() => {
     subtitleSize : 16 ,
     buttonTextSize : 16,
     fontFamily : "inter",
-    imageUrl: "https://illustrations.popsy.co/violet/online-community.svg",
-    x: 100,
-    y: 100,
-    width: 500,
+    imageUrl: "/logo.png",
+    x: 20,
+    y: newY,
+    width: 1200,
     height: 500,
   };
 
@@ -117,21 +152,21 @@ useEffect(() => {
       projects: [
   {
     id: 1,
-    image: "https://via.placeholder.com/400x250",
+    image: "/logo.png",
     name: "Project One",
     description: "A short description about project one.",
     link: "#",
   },
   {
     id: 2,
-    image: "https://via.placeholder.com/400x250",
+    image: "/logo.png",
     name: "Project Two",
     description: "A short description about project two.",
     link: "#",
   },
   {
     id: 3,
-    image: "https://via.placeholder.com/400x250",
+    image: "/logo.png",
     name: "Project Three",
     description: "A short description about project three.",
     link: "#",
@@ -142,7 +177,7 @@ useEffect(() => {
     buttonText: "Get Started",
     buttonColor: "#2563eb",
     buttonTextColor: "#ffffff",
-    bgColor: "#ffffff",
+    bgColor: "transparent",
     textColor: "#111111",
     titleColor : "#111111",
     subtitleColor : "#111111",
@@ -154,9 +189,9 @@ useEffect(() => {
     subtitleSize : 16 ,
     buttonTextSize : 16,
     fontFamily : "inter",
-    x: 100,
-    y: 100,
-    width: 500,
+    x: 20,
+    y: newY,
+    width: 1200,
     height: 500,
   };
 
@@ -175,7 +210,7 @@ useEffect(() => {
     buttonText: "Contact Us",
     buttonColor: "#2563eb",
     buttonTextColor: "#ffffff",
-    bgColor: "#ffffff",
+    bgColor: "transparent",
     textColor: "#111111",
     titleColor: "#111111",
     titleBold : false,
@@ -185,10 +220,10 @@ useEffect(() => {
     descriptionSize : 16 ,
     buttonTextSize : 16,
     fontFamily : "inter",
-    imageUrl: "https://illustrations.popsy.co/violet/online-community.svg",
-    x: 100,
-    y: 100,
-    width: 500,
+    imageUrl: "/logo.png",
+    x: 20,
+    y: newY,
+    width: 1200,
     height: 500,
   };
 
@@ -203,8 +238,8 @@ useEffect(() => {
     id, // ✅ use the same one
     type: "form",
      x: 100,
-     y: 100,
-    width: 400,
+     y: newY,
+    width: 450,
     height: 350,
     fields: [
       { id: 1, label: "Name", type: "text", value: "" },
@@ -225,7 +260,6 @@ useEffect(() => {
   setSelectedBlockId(id);
   return; 
   }
-
   if (type === "navbar") {
     const hasNavbar = blocks.some(b => b.type === "navbar");
     if (hasNavbar) return; // prevent multiple navbars
@@ -266,20 +300,19 @@ useEffect(() => {
     id,
     type,
     x: 100,
-    y: 100,
+    y: newY,
     bold: false,
-    width: type === "image" ? 220 : 250,
-    height: type === "image" ? 180 : "auto",
-    fontSize: 16,
+    width: type === "image" ? 500 : 150,
+    height: type === "image" ? 500 : 50,
+    fontSize: type === "text" ? 16 : 18,
     content: type === "text" ? "Text..." : "",
     color: type === "text" ? "#000000" : "#06276eff",
-    label: type === "button" ? "Click Me" : "",
+    label: type === "button" ? "Button" : "",
     buttonColor: "#06276eff",
     src: null,
     isEditing: false,
     textAlign: "left",
   };
-
   if (type === "footer") {
   const hasFooter = blocks.some((block) => block.type === "footer");
   if (hasFooter) return alert("You already have a footer 😅");
@@ -532,65 +565,13 @@ ${googleFontsLink}
   return (
     <>
       {/* Navbar */}
-      <nav className="flex items-center justify-between px-6 py-3 bg-white shadow-md sticky top-0 z-50 border-b border-pink-100">
-  {/* Left Section — Logo / App Name */}
-  <div className="flex items-center space-x-2">
-    <span className="text-pink-400  text-xl font-semibold tracking-wide">
-      Landing<span className="text-blue-900">Forge</span>
-    </span>
-  </div>
-
-  {/* Middle Section — Navigation Links */}
-  <div className="hidden md:flex items-center space-x-6">
-    <button className="text-gray-600 hover:text-pink-500 transition">
-      Dashboard
-    </button>
-    <button className="text-gray-600 hover:text-pink-500 transition">
-      My Pages
-    </button>
-    <button className="text-gray-600 hover:text-pink-500 transition">
-      Templates
-    </button>
-    <button className="text-gray-600 hover:text-pink-500 transition">
-      Analytics
-    </button>
-  </div>
-
-  {/* Right Section — Actions */}
-  <div className="flex items-center space-x-3">
-    {/* Export Button (only visible in preview mode) */}
-    {isPreview && (
-      <button
-        onClick={exportLandingPage}
-        className="bg-pink-400  text-white px-4 py-2 rounded-md hover:bg-pink-600 transition"
-      >
-        Export
-      </button>
-    )}
-
-    {/* Preview Toggle */}
-    <button
-      onClick={() => setIsPreview(!isPreview)}
-      className="bg-blue-900 text-white px-4 py-2 rounded-md hover:bg-blue-800 transition"
-    >
-      {isPreview ? "Exit Preview" : "Preview"}
-    </button>
-
-    {/* User Profile Dropdown (placeholder for now) */}
-    <div className="relative">
-      <Link 
-       to="/profile"
-      className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded-full hover:bg-gray-200 transition">
-        <img
-          src="https://i.pravatar.cc/30"
-          alt="User"
-          className="w-6 h-6 rounded-full"
-        />
-        <span className="hidden md:inline text-sm text-gray-700">You</span>
-      </Link>
-    </div>
-  </div>
-      </nav>
+      <NavBuilderBlock
+        isPreview={isPreview}
+        setIsPreview={setIsPreview}
+        exportLandingPage={exportLandingPage}
+        user={user}
+        profileImg={profileImg}
+      />
 
 
     {/* builder */}
@@ -612,527 +593,17 @@ ${googleFontsLink}
 
       
       {/* start building */}
-      <div  className="flex-1 p-2" onMouseDown={handleCanvasMouseDown}>        
+      <div  className="flex-1 p-2"
+       onMouseDown={handleCanvasMouseDown}>        
         {/* GLOBAL TOOLBAR  */}
-        {!isPreview && selectedBlock && (
-          <div
-            className="toolbar  fixed top-3 left-[60%] -translate-x-1/2 bg-white shadow-lg rounded-lg px-4 py-2 flex items-center gap-2 z-50"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            {/* width  */}
-            <div className="flex items-center flex-col">
-              <input
-                onPointerDown={(e) => e.stopPropagation()}
-                type="number"
-                value={selectedBlock.width}
-                onChange={(e) => updateBlock(selectedBlock.id, "width", e.target.value === "" ? "" : Number(e.target.value))}
-                className="border rounded p-1 w-15"
-              />
-              <label className="text-sm text-gray-700">Width</label>
-            </div>
-            {/* height */}
-            <div className="flex items-center flex-col">
-              <input
-                onPointerDown={(e) => e.stopPropagation()}
-                type="number"
-                value={selectedBlock.height === "auto" ? "" : selectedBlock.height}
-                onChange={(e) => updateBlock(selectedBlock.id, "height", e.target.value === "" ? "auto" : Number(e.target.value))}
-                className="border rounded p-1 w-15"
-              />
-              <label className="text-sm text-gray-700">Height</label>
-            </div>
-            {selectedBlock.type === "text" && (
-              <>
-            <FontSelector
-              selectedFont={selectedBlock?.fontFamily || "Inter"}
-              onChange={(font) => updateBlock(selectedBlock.id, "fontFamily", font)}
-            />
-                {/* textcolor */}
-                <input onPointerDown={(e) => e.stopPropagation()} type="color" value={selectedBlock.color} onChange={(e) => updateBlock(selectedBlock.id, "color", e.target.value)} />
-                {/* fonstise */}
-                <div className="flex items-center gap-2">
-                  <label className="text-sm text-gray-600">Font</label>
-                  <input
-                    onPointerDown={(e) => e.stopPropagation()}
-                    type="number"
-                    min={1}
-                    value={selectedBlock.fontSize || 16}
-                    onChange={(e) => updateBlock(selectedBlock.id, "fontSize",Number(e.target.value))}
-                    className="border rounded p-1 w-16"
-                  />
-                </div>
-                <textarea onPointerDown={(e) => e.stopPropagation()} value={selectedBlock.content} onChange={(e) => updateBlock(selectedBlock.id, "content", e.target.value)} className="border rounded p-1" />
-               {/* bold */}
-                <button
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={() => updateBlock(selectedBlock.id, "bold", !selectedBlock.bold)}
-                  className={`px-2 py-1 border rounded-lg transition-all duration-150 hover:bg-gray-100 ${
-                    selectedBlock.bold ? "bg-gray-800 text-white" : "bg-white text-gray-700"
-                  }`}
-                >
-                  <b>B</b>
-                </button>
-                {/* alignment */}
-                <div className="flex items-center gap-2">
-  <button
-    onPointerDown={(e) => e.stopPropagation()}
-    onClick={() => updateBlock(selectedBlock.id, "textAlign", "left")}
-    className={`px-2 py-1 border rounded-md text-sm ${
-      selectedBlock.textAlign === "left"
-        ? "bg-gray-900 text-white border-gray-900"
-        : "bg-white text-gray-700 hover:bg-gray-100"
-    }`}
-  >
-    ⬅
-  </button>
-
-  <button
-    onPointerDown={(e) => e.stopPropagation()}
-    onClick={() => updateBlock(selectedBlock.id, "textAlign", "center")}
-    className={`px-2 py-1 border rounded-md text-sm ${
-      selectedBlock.textAlign === "center"
-        ? "bg-gray-900 text-white border-gray-900"
-        : "bg-white text-gray-700 hover:bg-gray-100"
-    }`}
-  >
-    ⬍
-  </button>
-
-  <button
-    onPointerDown={(e) => e.stopPropagation()}
-    onClick={() => updateBlock(selectedBlock.id, "textAlign", "right")}
-    className={`px-2 py-1 border rounded-md text-sm ${
-      selectedBlock.textAlign === "right"
-        ? "bg-gray-900 text-white border-gray-900"
-        : "bg-white text-gray-700 hover:bg-gray-100"
-    }`}
-  >
-    ➡
-  </button>
-                </div>
-
-              </>
-            )}
-            {selectedBlock.type === "button" && (
-              <>
-                <input onPointerDown={(e) => e.stopPropagation()} type="color" value={selectedBlock.color} onChange={(e) => updateBlock(selectedBlock.id, "color", e.target.value)} />
-                <input onPointerDown={(e) => e.stopPropagation()} type="text" value={selectedBlock.label} onChange={(e) => updateBlock(selectedBlock.id, "label", e.target.value)} className="border rounded p-1" />
-              <FontSelector
-              selectedFont={selectedBlock?.fontFamily || "Inter"}
-              onChange={(font) => updateBlock(selectedBlock.id, "fontFamily", font)}
-            />
-
-              </>
-              
-            )}
-            {selectedBlock.type === "image" && (
-              <>
-                <input
-                  onPointerDown={(e) => e.stopPropagation()}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) handleImageUpload(selectedBlock.id, e.target.files[0]);
-                  }}
-                />
-                <button onClick={() => updateBlock(selectedBlock.id, "src", null)} className="px-2 py-1 bg-gray-100 rounded">
-                  Clear
-                </button>
-              </>
-            )}
-            {selectedBlock.type === "navbar" && (
-  <>
-    {/* links fontsize */}
-    <div className="flex items-center flex-col">
-      <input
-        onPointerDown={(e) => e.stopPropagation()}
-        type="number"
-        min={1}
-        value={selectedBlock.linksFontSize || 16}
-        onChange={(e) => updateBlock(selectedBlock.id, "linksFontSize",Number(e.target.value))}
-        className="border rounded p-1 w-16"
-      />
-      <label className="text-sm text-gray-700">links</label>
-
-    </div>
-    {/* ctafontsize */}
-    <div className="flex items-center flex-col">
-      <input
-        onPointerDown={(e) => e.stopPropagation()}
-        type="number"
-        min={1}
-        value={selectedBlock.ctaFontSize || 16}
-        onChange={(e) => updateBlock(selectedBlock.id, "ctaFontSize",Number(e.target.value))}
-        className="border rounded p-1 w-16"
-      />
-      <label className="text-sm text-gray-700">cta</label>
-    </div>
-    {/* logo fontsize */}
-    <div className="flex items-center flex-col">
-      <input
-        onPointerDown={(e) => e.stopPropagation()}
-        type="number"
-        min={1}
-        value={selectedBlock.logoFontSize || 16}
-        onChange={(e) => updateBlock(selectedBlock.id, "logoFontSize",Number(e.target.value))}
-        className="border rounded p-1 w-16"
-      />
-      <label className="text-sm text-gray-700">Logo</label>
-    </div>
-    {/* button background */}
-    <div className="flex items-center flex-col">
-      <input
-        type="color"
-        value={selectedBlock.ctaBgColor}
-        onChange={(e) => updateBlock(selectedBlock.id, "ctaBgColor", e.target.value)}
-      />
-      <label className="text-sm text-gray-700">Btn BG</label>
-    </div>
-    {/* btn text color */}
-    <div className="flex items-center flex-col">
-      <input
-        type="color"
-        value={selectedBlock.ctaTextColor}
-        onChange={(e) => updateBlock(selectedBlock.id, "ctaTextColor", e.target.value)}
-      />
-      <label className="text-sm text-gray-700">Btn Text</label>
-    </div>
-    {/* links color */}
-    <div className="flex items-center flex-col">
-      <input
-        type="color"
-        value={selectedBlock.linkColor}
-        onChange={(e) => updateBlock(selectedBlock.id, "linkColor", e.target.value)}
-      />
-      <label className="text-sm text-gray-700">links</label>
-    </div>
-    {/* logo color */}
-    <div className="flex items-center flex-col">
-      <input
-        type="color"
-        value={selectedBlock.logoColor}
-        onChange={(e) => updateBlock(selectedBlock.id, "logoColor", e.target.value)}
-      />
-      <label className="text-sm text-gray-700">logo</label>
-    </div>
-
-    {/* bold */}
-
-    {/* logo */}
-    <button
-      onClick={() =>
-         updateBlock(selectedBlock.id, "logoBold", !selectedBlock.logoBold
-         )}
-      className={`px-2 py-1 border rounded ${selectedBlock.logoBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-    >
-      <b>B</b> Logo
-    </button>
-    {/* btn */}
-    <button
-      onClick={() => updateBlock(selectedBlock.id, "ctaBold", !selectedBlock.ctaBold)}
-      className={`px-2 py-1 border rounded ${selectedBlock.ctaBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-    >
-      <b>B</b> Button
-    </button>
-    {/* links */}
-    <button
-      onClick={() => updateBlock(selectedBlock.id, "linksBold", !selectedBlock.linksBold)}
-      className={`px-2 py-1 border rounded ${selectedBlock.linksBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-    >
-      <b>B</b> Links
-    </button>
-  </>
-            )}
-            {selectedBlock.type === "footer" && (
-            <>
-    <div className="flex items-center gap-2">
-    <div className="flex items-center gap-2">
-      <label className="text-sm text-gray-600">FontSize</label>
-      <input
-        onPointerDown={(e) => e.stopPropagation()}
-        type="number"
-        min={1}
-        value={selectedBlock.textFontSize || 16}
-        onChange={(e) => updateBlock(selectedBlock.id, "textFontSize",Number(e.target.value))}
-        className="border rounded p-1 w-16"
-      />
-      </div>
-      <label className="text-sm text-gray-600">Color</label>
-      <input
-        type="color"
-        value={selectedBlock.textColor}
-        onChange={(e) => updateBlock(selectedBlock.id, "textColor", e.target.value)}
-      />
-    </div>
-    <button
-      onClick={() => updateBlock(selectedBlock.id, "textBold", !selectedBlock.textBold)}
-      className={`px-2 py-1 border rounded ${selectedBlock.textBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-    >
-      <b>B</b> 
-    </button>
-  </>
-            )}
-            {selectedBlock?.type === "form" && (
-              <>
-    
-              <div className="space-y-2">
-
-              </div>
-              {/* btnfontsize */}
-                <div className="flex items-center flex-col">
-      <input
-        onPointerDown={(e) => e.stopPropagation()}
-        type="number"
-        min={1}
-        value={selectedBlock.btnFontSize || 16}
-        onChange={(e) => updateBlock(selectedBlock.id, "btnFontSize",Number(e.target.value))}
-        className="border rounded p-1 w-16"
-      />
-      <label className="text-sm text-gray-700">cta</label>
-                </div>
-                
-                {/* button background */}
-                <div className="flex items-center flex-col">
-      <input
-        type="color"
-        value={selectedBlock.buttonColor}
-        onChange={(e) => updateBlock(selectedBlock.id, "buttonColor", e.target.value)}
-      />
-      <label className="text-sm text-gray-700">Btn BG</label>
-                </div>
-                 {/* btn text color */}
-                <div className="flex items-center flex-col">
-      <input
-        type="color"
-        value={selectedBlock.btnTextColor}
-        onChange={(e) => updateBlock(selectedBlock.id, "btnTextColor", e.target.value)}
-      />
-      <label className="text-sm text-gray-700">Btn Text</label>
-                </div>
-                {/* bold toggle */}
-                <button
-      onClick={() =>
-         updateBlock(selectedBlock.id, "Bold", !selectedBlock.Bold
-         )}
-      className={`px-2 py-1 border rounded ${selectedBlock.Bold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-    >
-      <b>B</b> 
-                </button>
-                {/* add field */}
-                <button
-      onClick={() =>
-        updateBlock(selectedBlock.id, "fields", [
-          ...selectedBlock.fields,
-          { id: Date.now(), label: "New Field", type: "text", value: "" },
-        ])
-      }
-      className="bg-gray-800 text-white px-2 py-2 rounded w-30"
-    >
-      + Add Field
-                </button>
-              </>
-            )}
-            {selectedBlock?.type === "hero" && (
-              // bold
-              <>
-            <FontSelector
-              selectedFont={selectedBlock?.fontFamily || "Inter"}
-              onChange={(font) => updateBlock(selectedBlock.id, "fontFamily", font)}
-            />
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "titleBold", !selectedBlock.titleBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.titleBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Title
-              </button>
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "subtitleBold", !selectedBlock.subtitleBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.subtitleBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Subtitle
-              </button>
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "buttonBold", !selectedBlock.buttonBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.buttonBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Btn
-              </button>
-              {/* text fontsize */}
-               <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.titleSize || 30}
-                  onChange={(e) => updateBlock(selectedBlock.id, "titleSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Title</label>
-              </div>
-              <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.subtitleSize || 16}
-                  onChange={(e) => updateBlock(selectedBlock.id, "subtitleSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Subtitle</label>
-              </div>
-              <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.buttonTextSize || 16}
-                  onChange={(e) => updateBlock(selectedBlock.id, "buttonTextSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Button</label>
-              </div>
-             </>
-            )}
-            {selectedBlock?.type === "portfolio" && (
-              // bold
-              <>
-            <FontSelector
-              selectedFont={selectedBlock?.fontFamily || "serif"}
-              onChange={(font) => updateBlock(selectedBlock.id, "fontFamily", font)}
-            />
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "titleBold", !selectedBlock.titleBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.titleBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Title
-              </button>
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "subtitleBold", !selectedBlock.subtitleBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.subtitleBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Subtitle
-              </button>
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "buttonBold", !selectedBlock.buttonBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.buttonBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Btn
-              </button>
-              {/* text fontsize */}
-               <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.titleSize || 30}
-                  onChange={(e) => updateBlock(selectedBlock.id, "titleSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Title</label>
-              </div>
-              <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.subtitleSize || 16}
-                  onChange={(e) => updateBlock(selectedBlock.id, "subtitleSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Subtitle</label>
-              </div>
-              <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.buttonTextSize || 16}
-                  onChange={(e) => updateBlock(selectedBlock.id, "buttonTextSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Button</label>
-              </div>
-             </>
-            )}
-            {selectedBlock?.type === "aboutSection" && (
-              // bold
-              <>
-            <FontSelector
-              selectedFont={selectedBlock?.fontFamily || "serif"}
-              onChange={(font) => updateBlock(selectedBlock.id, "fontFamily", font)}
-            />
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "titleBold", !selectedBlock.titleBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.titleBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Title
-              </button>
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "descriptionBold", !selectedBlock.descriptionBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.descriptionBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Subtitle
-              </button>
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "buttonBold", !selectedBlock.buttonBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.buttonBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Btn
-              </button>
-              {/* text fontsize */}
-               <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.titleSize || 30}
-                  onChange={(e) => updateBlock(selectedBlock.id, "titleSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Title</label>
-              </div>
-              <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.descriptionSize || 16}
-                  onChange={(e) => updateBlock(selectedBlock.id, "descriptionSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Subtitle</label>
-              </div>
-              <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.buttonTextSize || 16}
-                  onChange={(e) => updateBlock(selectedBlock.id, "buttonTextSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Button</label>
-              </div>
-             </>
-            )}
-            {/* duplicate a block */}
-            <button onClick={() => duplicateBlock(selectedBlock.id)}
-            className="px-2 py-1 border rounded-lg transition-all duration-150 hover:bg-gray-100"
-            >
-              D
-            </button>
-            {/* delete a block */}
-            <button
-              onClick={() => deleteBlock(selectedBlock.id)}
-              className="text-red-500 hover:text-red-700 transition-transform transform hover:scale-110"
-              title="Delete block"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        )}
+        <GlobalToolbar
+        isPreview={isPreview}
+        selectedBlock={selectedBlock}
+        updateBlock={updateBlock}
+        handleImageUpload={handleImageUpload}
+        duplicateBlock={duplicateBlock}
+        deleteBlock={deleteBlock}
+        />
         {/* height and resposniveness toolbar  */}
         <div style={{width : "60%"}}
 className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
@@ -1198,6 +669,9 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
   )}
 
         </div>
+
+
+        
         {/* where the drag and drop is possible */}
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
           <div 
@@ -1265,8 +739,10 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
               )}
             </div>
             )}
-
+            
             {blocks.map((block) => (
+
+               
               <DraggableBlock
                 key={block.id}
                 id={block.id}
@@ -1276,66 +752,94 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                 onStartResize={startResizing}
                 onSelect={selectBlock}
               >
-              
+                
                 {/* TEXT */}
                 {block.type === "text" && (
   <div
     onClick={(e) => {
       e.stopPropagation();
       setSelectedBlockId(block.id);
+      updateBlock(block.id, "isEditing", true);
     }}
     style={{
       fontFamily: block.fontFamily || "Inter, sans-serif",
-      textAlign: block.textAlign,
       fontWeight: block.bold ? "bold" : "normal",
       fontSize: block.fontSize || 16,
-      fontFamily: block.fontFamily || "Inter",
       color: block.color || "#000",
-      width: typeof block.width === "number" ? block.width : block.width,
-      height: block.height === "auto" ? "auto" : block.height,
+      textAlign: block.textAlign || "left",
+      width: block.width || "auto",
+      minHeight: "20px",
       padding: 8,
       borderRadius: 8,
-      boxSizing: "border-box",
       background:
-        selectedBlockId === block.id
-          ? "rgba(255,255,255,0.9)"
+        selectedBlockId === block.id && block.isEditing
+          ? "rgba(255, 255, 255, 0.9)"
           : "transparent",
       outline:
         selectedBlockId === block.id
           ? "1.5px solid #f472b6"
           : "1px solid transparent",
-      cursor: "text",
       whiteSpace: "pre-wrap",
       wordBreak: "break-word",
+      cursor: "text",
     }}
-    suppressContentEditableWarning
     contentEditable={block.isEditing}
+    suppressContentEditableWarning
     onInput={(e) =>
       updateBlock(block.id, "content", e.currentTarget.textContent)
     }
-    onDoubleClick={() => updateBlock(block.id, "isEditing", true)}
     onBlur={() => updateBlock(block.id, "isEditing", false)}
   >
     {block.content || "Click to edit text..."}
   </div>
                 )}
 
+
+                
                 {/* IMAGE */}
                 {block.type === "image" && (
-                  <div onClick={(e) => { e.stopPropagation(); setSelectedBlockId(block.id); }} className="relative inline-block" style={{ width: block.width, height: typeof block.height === "number" ? block.height : block.height }}>
-                    {selectedBlockId === block.id && (
-                      <>
-                        {/* <button onPointerDown={(e) => e.stopPropagation()} onClick={() => deleteBlock(block.id)} className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-7 h-7">✖</button> */}
-                        <div onPointerDown={(e) => startResizing(e, block.id)} className="absolute w-3 h-3 bg-blue-500 rounded-full" style={{ right: -6, bottom: -6, cursor: "se-resize" }} />
-                      </>
-                    )}
+  <div
+    onClick={(e) => {
+      e.stopPropagation();
+      setSelectedBlockId(block.id);
+    }}
+    className="relative inline-block"
+    style={{
+      width: block.width,
+      height: typeof block.height === "number" ? block.height : block.height
+    }}
+  >
+    {selectedBlockId === block.id && (
+      <div
+        onPointerDown={(e) => startResizing(e, block.id)}
+        className="absolute w-3 h-3 bg-blue-500 rounded-full"
+        style={{ right: -6, bottom: -6, cursor: "se-resize" }}
+      />
+    )}
 
-                    {block.src ? (
-                      <img onPointerDown={(e) => e.stopPropagation()} src={block.src} alt="uploaded" className="w-full h-full object-cover rounded" onClick={() => setSelectedBlockId(block.id)} style={{ display: "block" }} />
-                    ) : (
-                      <input onPointerDown={(e) => e.stopPropagation()} type="file" accept="image/*" onChange={(e) => handleImageUpload(block.id, e.target.files?.[0])} />
-                    )}
-                  </div>
+    {/* The image (default or uploaded) */}
+    <img
+      src={block.src || "/logo.png"}   // 👈 default image
+      alt="image block"
+      className="w-full h-full object-cover rounded cursor-pointer"
+      onClick={(e) => {
+        e.stopPropagation();
+        document.getElementById(`file-input-${block.id}`).click(); // 👈 trigger input
+      }}
+    />
+
+    {/* Hidden file input */}
+    <input
+      id={`file-input-${block.id}`}
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (file) handleImageUpload(block.id, file);
+      }}
+    />
+  </div>
                 )}
 
                 {/* BUTTON */}
@@ -1350,7 +854,9 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                     <button 
                      onPointerDown={(e) => e.stopPropagation()} 
                      style={{
-                       backgroundColor: block.color || "#06276eff", 
+                      fontSize : block.fontSize || 16,
+                      fontWeight : block.bold ? "bold" : "normal",
+                      backgroundColor: block.color || "#06276eff", 
                       fontFamily: block.fontFamily || "Inter, sans-serif",
                      }} 
                      className="w-full h-full text-white font-semibold rounded shadow-md">{block.label}</button>
@@ -1379,7 +885,7 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
       btnTextColor: block.btnTextColor,
       btnFontSize: block.btnFontSize,
       width: block.width,
-      height: block.height,
+      height: block.height || "auto",
     }}
     onChange={updateBlock}
               onClick={(e) => {
@@ -1523,7 +1029,6 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                     bottom: 0,
                     width: "100%",
                     background:footerBG,
-                    borderTop: "1px solid #f9a8d4",
                     textAlign: "center",
                     padding: "1rem",
                   }}
