@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+/* Cute pink scrollbar for the sidebar */
+.sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #f9a8d4; /* pastel pink */
+  border-radius: 12px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: #fde7f3; /* softer light pink */
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: #f472b6; /* deeper pink on hover */
+}
 
 
 
