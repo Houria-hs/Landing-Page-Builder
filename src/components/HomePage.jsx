@@ -2,25 +2,36 @@ import React from 'react'
 // import Footer from './Footer'
 import { Link } from 'react-router-dom'
 import Navbar from './Navbar'
+import { useState } from 'react'
+
 
 const HomePage = () => {
+  const [user, setUser] = useState(null);
+    const [profileImg, setProfileImg] = useState(
+    localStorage.getItem("profileImg") || ""
+  );
   return (
     <>
-    <Navbar/>
-    <div className='flex flex-col min-h-screen bg-pink-50 font-sans'>
-      <header className="flex-1 flex flex-col items-center justify-center text-center px-6 
+    <Navbar
+    profileImg={profileImg}
+    user={user}
+    />
+    <div className='flex flex-col  bg-pink-50 font-sans'>
+      <header className="flex-1 flex flex-col items-center justify-center text-center px-6
+      py-22
                          bg-gradient-to-b from-pink-100 via-pink-50 to-blue-50">
         <h2 className="text-5xl font-extrabold text-blue-900 mb-4">
           Build Stunning Landing Pages
         </h2>
         <p className="text-lg text-gray-700 max-w-xl mb-6">
-          A simple drag-and-drop tool to create landing pages with ease. No code, no stress.
+          <span className='text-pink-400'>NovaBuild</span> is simple drag-and-drop tool to create landing pages with ease. No code, no stress.
         </p>
         <Link to="/builder">
           <button className="bg-pink-400 text-white px-6 py-3 rounded-lg text-lg shadow hover:bg-pink-500 transition">
             Start Building
           </button>
         </Link>
+        
       </header>
 
       <section id="features" className="py-16 px-8 bg-white">
@@ -44,6 +55,12 @@ const HomePage = () => {
       </section>
 
       {/* <Footer /> */}
+
+       {/* Simple Footer */}
+        <footer className="bg-blue-900 text-white py-6 mt-auto text-center">
+          <p className="text-sm">&copy; {new Date().getFullYear()} NovaBuild. All rights reserved.</p>
+           <h5>Designed and developed by <b className='text-pink-100'>Houria Hasbellaoui</b></h5>
+        </footer>
     </div>
     </>
   )
