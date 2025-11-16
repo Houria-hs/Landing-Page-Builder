@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/auth";
+const API_URL = "https://landing-page-builder-backend.onrender.com/api/auth";
 
 export const register = async (data) => {
   const res = await axios.post(`${API_URL}/register`, data);
@@ -35,7 +35,7 @@ export const updateProfile = async (data) => {
   const token = localStorage.getItem("token");
 
   const res = await axios.put(
-    "http://localhost:5000/api/users/update",
+    "https://landing-page-builder-backend.onrender.com/api/users/update",
     data,
     {
       headers: { Authorization: `Bearer ${token}` }
