@@ -1,8 +1,38 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit3, Mail, Phone, MapPin, Info } from "lucide-react";
+import { Edit3, Mail, Phone, MapPin, Info, LogOut, Home, Folder } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { getProfile , updateProfile } from "../services/authService";
+
+
 
 export default function UserProfile() {
   const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
+const [user, setUser] = useState(() => {
+  const saved = localStorage.getItem("user");
+  return saved ? JSON.parse(saved) : null;
+});
+
+useEffect(() => {
+  async function loadProfile() {
+    try {
+      const data = await getProfile();
+      setUser(data);
+      localStorage.setItem("user", JSON.stringify(data));
+    } catch (err) {
+      console.error("Error loading user:", err);
+      navigate("/login");
+    }
+  }
+  loadProfile();
+}, []);
+
+  // logout function
+    const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
+  };
 
   // image persisted
   const [image, setImage] = useState(() => {
@@ -13,44 +43,21 @@ export default function UserProfile() {
     else localStorage.removeItem("profileImg");
   }, [image]);
 
-  // profile persisted (lazy init)
-  const [profile, setProfile] = useState(() => {
-    const saved = localStorage.getItem("profileData");
-    return saved
-      ? JSON.parse(saved)
-      : {
-          name: "Houry",
-          email: "houry@example.com",
-          phone: "+213 555 123 456",
-          location: "Algiers, Algeria",
-          bio: "Web developer & digital artist who loves building beautiful interfaces and painting galaxies.",
-        };
-  });
 
-  useEffect(() => {
-    localStorage.setItem("profileData", JSON.stringify(profile));
-  }, [profile]);
 
-  // savedProjects persisted
-  const [savedProjects, setSavedProjects] = useState(() => {
-    const saved = localStorage.getItem("savedProjects");
-    return saved
-      ? JSON.parse(saved)
-      : [
-          { id: 1, name: "Landing Page #1", date: "Oct 28, 2025" },
-          { id: 2, name: "Portfolio Mockup", date: "Oct 30, 2025" },
-        ];
-  });
 
-  useEffect(() => {
-    localStorage.setItem("savedProjects", JSON.stringify(savedProjects));
-  }, [savedProjects]);
+const handleUserChange = async (field, value) => {
+  const updated = { ...user, [field]: value }; // optimistic UI
+  setUser(updated);
 
-  // handle profile updates
-  const handleChange = (field, value) => {
-    setProfile((prev) => ({ ...prev, [field]: value }));
-  };
+  try {
+    await updateProfile({ [field]: value });
+  } catch (err) {
+    console.error("Failed to update backend", err);
+  }
+};
 
+// image upload
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -62,22 +69,24 @@ export default function UserProfile() {
     }
   };
 
-  // helper to add project and persist automatically via effect
-  const addNewProject = () => {
-    const newProject = {
-      id: (savedProjects[0]?.id || 0) + 1,
-      name: `New Project #${(savedProjects[0]?.id || 0) + 1}`,
-      date: new Date().toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
-    };
-    setSavedProjects([newProject, ...savedProjects]);
-  };
+  if (!user) return <p className="text-center mt-10">Loading...</p>;
 
   return (
-    <div className="max-w-2xl mx-auto bg-white border border-pink-100 rounded-2xl shadow-md p-6 mt-10">
+    <div className="max-w-xl mx-auto bg-white border border-pink-100 rounded-2xl shadow-md p-6 mt-10">
+      
+        {/* NAVIGATION */}
+      <div className="flex justify-between items-center mb-6 text-sm font-medium">
+        <button className="flex items-center gap-1 text-gray-600 hover:text-pink-500" onClick={() => navigate("/")}>
+          <Home size={16}/> Home
+        </button>
+        <button className="flex items-center gap-1 text-gray-600 hover:text-pink-500" onClick={() => navigate("/projects")}>
+          <Folder size={16}/> My Projects
+        </button>
+        <button className="flex items-center gap-1 text-red-500" onClick={logout}>
+          <LogOut size={16}/> Logout
+        </button>
+      </div>
+      
       {/* Profile Header */}
       <div className="flex items-center gap-4">
         {/* Profile Picture */}
@@ -93,7 +102,6 @@ export default function UserProfile() {
               size={14}
               className="text-white bg-pink-500 p-1.5 rounded-full shadow hover:bg-pink-600 transition"
               onClick={() => {
-                /* optional: trigger file input programmatically if desired */
               }}
             />
             <input
@@ -105,51 +113,52 @@ export default function UserProfile() {
           </label>
         </div>
 
+
         {/* Username */}
         <div className="flex-1">
           <div className="flex items-center justify-between">
             <h2
               contentEditable
               suppressContentEditableWarning
-              onBlur={(e) => handleChange("name", e.currentTarget.textContent?.trim() || "")}
+              onBlur={(e) => handleUserChange("name", e.currentTarget.textContent?.trim() || "")}
               className="text-xl font-semibold text-gray-800 flex items-center gap-2"
             >
-              {profile.name}
+              {user.name}
             </h2>
-
-            {/* If you want toggle editing mode via a button, enable this */}
-            {/* <button onClick={() => setIsEditing((p) => !p)}>
-              <Edit3 size={16} />
-            </button> */}
           </div>
           <p className="text-sm text-gray-500 mt-1">Creative Builder ✨</p>
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="my-5 border-t border-gray-200"></div>
+       <div className="my-5 border-t border-gray-200"></div>
+
 
       {/* Editable Profile Fields */}
       <div className="grid gap-3 text-sm">
         {/* Email */}
         <div className="flex items-center gap-2">
-          <Mail size={16} className="text-pink-400" />
+           <Mail size={16} className="text-pink-400"/>
           {isEditing ? (
-            <input
-              type="email"
-              value={profile.email}
-              onBlur={(e) => handleChange("email", e.target.value)}
-              autoFocus
-              className="border-b border-gray-300 focus:border-pink-400 outline-none flex-1"
-            />
+           <input
+            type="email"
+            value={user.email}
+            onBlur={(e) => handleUserChange("email", e.target.value)}
+            autoFocus
+            setIsEditing = {true}
+            className="
+              flex-1 bg-pink-50 border border-pink-300
+              focus:border-pink-500 focus:ring-2 focus:ring-pink-200
+              text-gray-700 px-2 py-1 rounded-lg transition-all outline-none
+            "
+          />
           ) : (
             <p
               contentEditable
               suppressContentEditableWarning
-              onBlur={(e) => handleChange("email", e.currentTarget.textContent?.trim() || "")}
+              onBlur={(e) => handleUserChange("email", e.currentTarget.textContent?.trim() || "")}
               className="text-gray-700"
             >
-              {profile.email}
+              {user.email}
             </p>
           )}
         </div>
@@ -159,18 +168,24 @@ export default function UserProfile() {
           {isEditing ? (
             <input
               type="tel"
-              value={profile.phone}
-              onChange={(e) => handleChange("phone", e.target.value)}
-              className="border-b border-gray-300 focus:border-pink-400 outline-none flex-1"
-            />
+              value={user.phone}
+             onBlur={(e) => handleUserChange("phone", e.target.value)}
+            autoFocus
+            setIsEditing = {true}
+            className="
+              flex-1 bg-pink-50 border border-pink-300
+              focus:border-pink-500 focus:ring-2 focus:ring-pink-200
+              text-gray-700 px-2 py-1 rounded-lg transition-all outline-none
+            "
+          />
           ) : (
             <p
               contentEditable
               suppressContentEditableWarning
-              onBlur={(e) => handleChange("phone", e.currentTarget.textContent?.trim() || "")}
+              onBlur={(e) => handleUserChange("phone", e.currentTarget.textContent?.trim() || "")}
               className="text-gray-700"
             >
-              {profile.phone}
+              {user.phone || "Add phone"}
             </p>
           )}
         </div>
@@ -180,18 +195,24 @@ export default function UserProfile() {
           {isEditing ? (
             <input
               type="text"
-              value={profile.location}
-              onChange={(e) => handleChange("location", e.target.value)}
-              className="border-b border-gray-300 focus:border-pink-400 outline-none flex-1"
-            />
+              value={user.location}
+              onBlur={(e) => handleUserChange("location", e.target.value)}
+            autoFocus
+            setIsEditing = {true}
+            className="
+              flex-1 bg-pink-50 border border-pink-300
+              focus:border-pink-500 focus:ring-2 focus:ring-pink-200
+              text-gray-700 px-2 py-1 rounded-lg transition-all outline-none
+            "
+          />
           ) : (
             <p
               contentEditable
               suppressContentEditableWarning
-              onBlur={(e) => handleChange("location", e.currentTarget.textContent?.trim() || "")}
+              onBlur={(e) => handleUserChange("location", e.currentTarget.textContent?.trim() || "")}
               className="text-gray-700"
             >
-              {profile.location}
+              {user.location || "Add location"}
             </p>
           )}
         </div>
@@ -200,52 +221,30 @@ export default function UserProfile() {
           <Info size={16} className="text-pink-400 mt-1" />
           {isEditing ? (
             <textarea
-              value={profile.bio}
-              onChange={(e) => handleChange("bio", e.target.value)}
-              className="border-b border-gray-300 focus:border-pink-400 outline-none flex-1 resize-none"
+              value={user.bio}
+             onBlur={(e) => handleUserChange("bio", e.target.value)}
+            autoFocus
+            setIsEditing = {true}
+            className="
+              flex-1 bg-pink-50 border border-pink-300
+              focus:border-pink-500 focus:ring-2 focus:ring-pink-200
+              text-gray-700 px-2 py-1 rounded-lg transition-all outline-none
+            "
               rows={2}
             />
           ) : (
             <p
               contentEditable
               suppressContentEditableWarning
-              onBlur={(e) => handleChange("bio", e.currentTarget.textContent?.trim() || "")}
+              onBlur={(e) => handleUserChange("bio", e.currentTarget.textContent?.trim() || "")}
               className="text-gray-700"
             >
-              {profile.bio}
+              {user.bio || "Add a short bio"}
             </p>
           )}
         </div>
       </div>
 
-      {/* Saved Projects Section */}
-      <div>
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-md font-semibold text-gray-700">Saved Projects</h3>
-          <button
-            className="flex items-center gap-1 text-pink-500 hover:text-pink-600 text-sm"
-            onClick={addNewProject}
-          >
-            <Plus size={16} /> New
-          </button>
-        </div>
-
-        {savedProjects.length > 0 ? (
-          <div className="grid gap-3">
-            {savedProjects.map((project) => (
-              <div
-                key={project.id}
-                className="p-3 rounded-xl border border-pink-100 bg-pink-50 hover:bg-pink-100 transition cursor-pointer"
-              >
-                <h4 className="font-medium text-gray-700">{project.name}</h4>
-                <p className="text-xs text-gray-500">{project.date}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 text-sm italic">No saved projects yet 💭</p>
-        )}
-      </div>
     </div>
   );
 }
