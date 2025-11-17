@@ -7,6 +7,7 @@ export default function NavbarBlock({
   onUpdate = () => {},
   onUploadLogo = () => {},
   onSelect = () => {},
+  isPreview = () => {}
 }) {
   const fileRef = useRef(null);
 
@@ -30,7 +31,7 @@ export default function NavbarBlock({
           onSelect && onSelect();
         }}
         className={`w-full top-0 z-40 transition-all duration-200 ${
-          isEditing ? "ring-2 ring-pink-400 rounded-md" : ""
+          isEditing && !isPreview ? "ring-2 ring-pink-400 rounded-md" : ""
         }`}
       >
         <div
@@ -96,7 +97,7 @@ export default function NavbarBlock({
       </header>
 
       {/* === EDIT TOOLBAR === */}
-      {isEditing && (
+      {isEditing && !isPreview && (
         <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-[90%] bg-white border border-gray-300 rounded-xl shadow-lg p-4 z-50">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
             {/* Logo Options */}

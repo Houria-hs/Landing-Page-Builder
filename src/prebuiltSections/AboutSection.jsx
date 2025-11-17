@@ -98,13 +98,13 @@ const AboutSection = ({
             height: `${imgHeight}px`,
             objectFit: "cover",
             borderRadius: "10px",
-            border: selectedImage ? "2px solid #007bff" : "none",
+            border: selectedImage && !isPreview ? "2px solid #007bff" : "none",
             cursor: "pointer",
           }}
           onClick={() => setSelectedImage(!selectedImage)}
         />
 
-        {selectedImage && (
+        {selectedImage && !isPreview && (
           <div className="absolute top-full mt-3 flex flex-col gap-2 bg-white p-3 rounded-lg shadow-md border z-10">
             <label className="cursor-pointer text-sm font-medium text-blue-600">
               Change Image
@@ -139,11 +139,7 @@ const AboutSection = ({
       <img src={imageUrl} alt="about us"
       className="rounded-2xl shadow-md object-cover"
        />
-      // <div
-      //   className="w-64 h-64 bg-gray-200 flex items-center justify-center rounded-2xl cursor-pointer"
-      //   onClick={() => setSelectedImage(true)}
-      // >
-      // </div>
+
     )}
   </div>
 </div>
@@ -154,21 +150,21 @@ const AboutSection = ({
         className="w-full md:w-1/2 flex flex-col gap-6"
         style={{ fontFamily }}
       >
-        {editingTitle ? (
+        {editingTitle ? !isPreview && (
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          onBlur={() => setEditingTitle(false)}
+          onBlur={() => !isPreview ? setEditingTitle(false) : setEditingTitle(false) }
           autoFocus
           className="text-3xl font-bold border-b border-gray-300 focus:outline-none"
         />
       ) : (
         <h2
-          contentEditable
-          suppressContentEditableWarning
+          contentEditable={!isPreview}
+          suppressContentEditableWarning={true}
           className={`font-bold`}
-          onClick={() => setEditingTitle(true)}
+          onClick={() => !isPreview ? setEditingTitle(true) : setEditingTitle(false) }
           style={{ 
             color: titleColor || "#111", 
             fontFamily : fontFamily || "serif",
@@ -180,21 +176,21 @@ const AboutSection = ({
         </h2>
         )}
 
-      {editingdescription ? (
+      {editingdescription ? !isPreview && (
         <input
           type="text"
           value={description}
           onChange={(e) => setdescription(e.target.value)}
-          onBlur={() => setEditingdescription(false)}
+          onBlur={() => !isPreview ? setEditingdescription(false) : setEditingdescription(false)}
           autoFocus
           className="text-3xl font-bold border-b border-gray-300 focus:outline-none"
         />
       ) : (
         <p
-          contentEditable
-          suppressContentEditableWarning
+          contentEditable={!isPreview}
+          suppressContentEditableWarning={true}
           className="opacity-80 leading-relaxed"
-          onClick={() => setEditingdescription(true)}
+          onClick={() => !isPreview ? setEditingdescription(true) : setEditingdescription(false)}
           style={{
             fontWeight: descriptionBold ? "bold" : "normal",
             fontSize: descriptionSize || 16,
@@ -220,8 +216,8 @@ const AboutSection = ({
             style={{
             color: buttonTextColor || "#fff",
             }}
-            contentEditable
-            suppressContentEditableWarning
+            contentEditable={!isPreview}
+            suppressContentEditableWarning={true}
             onBlur={(e) => setButtonText(e.currentTarget.textContent)}
             className="outline-none"
           >

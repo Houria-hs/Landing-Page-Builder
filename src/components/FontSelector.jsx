@@ -14,7 +14,7 @@ const FontSelector = ({ selectedFont, onChange }) => {
       setFonts(JSON.parse(savedFonts));
       setLoading(false);
     } else {
-      fetch("http://localhost:5000/api/fonts")
+      fetch("https://landing-page-builder-backend.onrender.com/api/fonts")
         .then((res) => res.json())
         .then((data) => {
           if (data.items) {

@@ -74,10 +74,10 @@ const handleImageUpload = (e, projectId) => {
       handleChange("projects", updatedProjects);
     };
   // change the button link
-  const handleLinkEdit = () => {
-    const newLink = prompt("Enter your project link:", link);
-    if (newLink) setLink(newLink);
-  };
+  // const handleLinkEdit = () => {
+  //   const newLink = prompt("Enter your project link:", link);
+  //   if (newLink) setLink(newLink);
+  // };
 
 
   return (
@@ -87,20 +87,20 @@ const handleImageUpload = (e, projectId) => {
     >
       {/* Section Header */}
       <div className="text-center mb-12">
-        {editingTitle ? (
+        {editingTitle ? !isPreview && (
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          onBlur={() => setEditingTitle(false)}
+          onBlur={() => !isPreview ?  setEditingTitle(false) : setEditingTitle(false) }
           autoFocus
           className="text-3xl font-bold border-b border-gray-300 focus:outline-none"
         />
       ) : (
         <h2 className="text-3xl md:text-4xl font-bold mb-3"
-          contentEditable
-          suppressContentEditableWarning
-          onClick={() => setEditingTitle(true)}
+          contentEditable={!isPreview} 
+          suppressContentEditableWarning={true}
+          onClick={() => !isPreview ?  setEditingTitle(true) : setEditingTitle(false) }
           style={{
             color : titleColor ,
             fontFamily : fontFamily || "serif",
@@ -112,19 +112,19 @@ const handleImageUpload = (e, projectId) => {
         </h2>
         )}
         
-        {editingsubTitle ? (
+        {editingsubTitle ? !isPreview && (
         <input
           type="text"
           value={subtitle}
           onChange={(e) => setSubtitle(e.target.value)}
-          onBlur={() => setEditingsubTitle(false)}
+          onBlur={() =>  !isPreview ?  setEditingsubTitle(false) :  setEditingsubTitle(false)}
           autoFocus
           className="text-3xl font-bold border-b border-gray-300 focus:outline-none"
         />
       ) : (
         <p className="text-lg opacity-80"
-          contentEditable
-          suppressContentEditableWarning
+          contentEditable={!isPreview} 
+          suppressContentEditableWarning={true}
           style={{
             color : subtitleColor ,
             fontFamily : fontFamily || "serif",
@@ -132,7 +132,7 @@ const handleImageUpload = (e, projectId) => {
             fontSize : subtitleSize || 16,
           }}
          onInput={(e) => handleChange("subtitle", e.currentTarget.textContent)}
-         onClick={() => setEditingsubTitle(true)}
+         onClick={() =>  !isPreview ?  setEditingsubTitle(true) :  setEditingsubTitle(false)}
           >
           {subtitle}
           </p>
@@ -164,6 +164,8 @@ const handleImageUpload = (e, projectId) => {
   )}
 
   {/* Hover overlay to upload image */}
+  { !isPreview && (
+   <>
   <label
     htmlFor={`upload-${project.id}`}
     className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
@@ -178,6 +180,9 @@ const handleImageUpload = (e, projectId) => {
     onChange={(e) => handleImageUpload(e, project.id)}
     className="hidden"
   />
+  </>
+  )}
+
 </div>
 
 
@@ -186,8 +191,8 @@ const handleImageUpload = (e, projectId) => {
     <div className="p-6 flex flex-col gap-3">
       <h3
         className="text-xl font-semibold cursor-pointer"
-        contentEditable
-        suppressContentEditableWarning
+        contentEditable={!isPreview} 
+        suppressContentEditableWarning={true}
         onBlur={(e) => handleProjectChange(project.id, "name", e.currentTarget.textContent)}
       >
         {project.name}
@@ -195,8 +200,8 @@ const handleImageUpload = (e, projectId) => {
 
       <p
         className="text-sm opacity-80 cursor-pointer"
-        contentEditable
-        suppressContentEditableWarning
+        contentEditable={!isPreview} 
+        suppressContentEditableWarning={true}
         onBlur={(e) =>
           handleProjectChange(project.id, "description", e.currentTarget.textContent)
         }
@@ -204,7 +209,7 @@ const handleImageUpload = (e, projectId) => {
         {project.description}
       </p>
 
-{isEditing ? (
+{isEditing ?  (
   <div
     className="mt-auto inline-block px-5 py-2 rounded-lg text-center text-sm font-medium bg-black text-white hover:opacity-80 transition cursor-pointer"
             style={{
@@ -215,8 +220,8 @@ const handleImageUpload = (e, projectId) => {
             }}
   >
     <span
-      contentEditable
-      suppressContentEditableWarning
+      contentEditable={!isPreview} 
+      suppressContentEditableWarning={true}
       onBlur={(e) =>
         handleProjectChange(project.id, "buttonText", e.currentTarget.textContent)
       }
@@ -240,12 +245,12 @@ const handleImageUpload = (e, projectId) => {
 )}
 
       {/* link edit button */}
-        <button
+        {/* <button
           onClick={handleLinkEdit}
           className="absolute top-2 right-2 text-xs bg-gray-800 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition"
         >
           Edit Link
-        </button>
+        </button> */}
     </div>
   </div>
 ))}

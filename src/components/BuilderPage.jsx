@@ -1,20 +1,17 @@
 import React, { useState , useEffect} from "react";
 import DraggableBlock from "./dragg";
 import NavbarBlock from "./BuiltinNav";
-// import logo from "../imgs/logo.png"
 import FormBlock from "./FormBlock";
 import HeroBlock from "../prebuiltSections/HeroSection";
 import AboutSection from "../prebuiltSections/AboutSection";
 import PortfolioSection from "../prebuiltSections/Portfolio";
-import { Link } from "react-router-dom";
 import WebFont from "webfontloader";
 import Sidebar from "./SideBar";
 import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor } from "@dnd-kit/core";
 import { getProfile } from "../services/authService";
 import NavBuilderBlock from "./builderNav";
 import GlobalToolbar from "./GlobalToolbar";
-import { positionalKeys } from "framer-motion";
-import { motion, AnimatePresence } from "framer-motion";
+
 
 
 export default function Builder() {
@@ -71,6 +68,12 @@ useEffect(() => {
   const [RSpreviewMode, setRSpreviewMode] = useState("desktop");
   // sensors for drag and drop
   const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
+  // const sensors = isPreview
+  // ? [] 
+  // : useSensors(
+  //     useSensor(MouseSensor),
+  //     useSensor(TouchSensor)
+  //   );
 
   // saving the background colors to local storage as well
   useEffect(() => {
@@ -90,11 +93,11 @@ useEffect(() => {
   };
 
 
-  const deleteField = (fieldId) => {
-  updateBlock(selectedBlock.id, "fields",
-    selectedBlock.fields.filter(field => field.id !== fieldId)
-  );
-};
+//   const deleteField = (fieldId) => {
+//   updateBlock(selectedBlock.id, "fields",
+//     selectedBlock.fields.filter(field => field.id !== fieldId)
+//   );
+// };
 
   // Add block (keeps existing behavior)
   const addBlock = (type) => {
@@ -104,7 +107,7 @@ useEffect(() => {
 
   if (blocks.length > 0) {
     const last = blocks[blocks.length - 1];
-    newY = last.y + (last.height || 300) + 30;
+    newY = last.y + (last.height || 300) + 200;
   }
 
   
@@ -673,9 +676,10 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
 
         
         {/* where the drag and drop is possible */}
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd} >
           <div 
           style={{
+            
           transform:!isPreview ? "scale(0.7)" : "scale(1)" ,
           transformOrigin: "top center",
           // width : "100%",
@@ -720,9 +724,10 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                 position: "relative",
                 width: "100%",
               }}
-              className={`mb-6 navbar-editable ${selectedBlockId === navbarBlock.id ? "ring-2 ring-blue-400" : ""}`}
+              className={`mb-6 navbar-editable ${!isPreview && selectedBlockId === navbarBlock.id ? "ring-2 ring-blue-400" : ""}`}
             >
               <NavbarBlock
+              isPreview={isPreview}
                 block={navbarBlock}
                 isEditing={selectedBlockId === navbarBlock.id}
                 onSelect={() => setSelectedBlockId(navbarBlock.id)}
@@ -731,7 +736,7 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
               />
 
               {/* 🟦 Add resize handle only when selected */}
-              {selectedBlockId === navbarBlock.id && (
+              {selectedBlockId === navbarBlock.id && !isPreview && (
                 <div
                   onPointerDown={(e) => startResizingNavbar(e, navbarBlock.id)}
                   className="absolute bottom-0 left-0 w-full h-2 bg-blue-500/40 cursor-row-resize"
@@ -744,12 +749,14 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
 
                
               <DraggableBlock
+                disabled={isPreview}
+                isPreview={isPreview} 
                 key={block.id}
                 id={block.id}
                 x={block.x}
                 y={block.y}
                 isEditing={selectedBlockId === block.id}
-                onStartResize={startResizing}
+                onStartResize={!isPreview ? startResizing : undefined}
                 onSelect={selectBlock}
               >
                 
@@ -783,8 +790,8 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
       wordBreak: "break-word",
       cursor: "text",
     }}
-    contentEditable={block.isEditing}
-    suppressContentEditableWarning
+    contentEditable={!isPreview && block.isEditing}
+    suppressContentEditableWarning={true}
     onInput={(e) =>
       updateBlock(block.id, "content", e.currentTarget.textContent)
     }
@@ -793,8 +800,6 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
     {block.content || "Click to edit text..."}
   </div>
                 )}
-
-
                 
                 {/* IMAGE */}
                 {block.type === "image" && (
@@ -809,7 +814,7 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
       height: typeof block.height === "number" ? block.height : block.height
     }}
   >
-    {selectedBlockId === block.id && (
+    {selectedBlockId === block.id && !isPreview && (
       <div
         onPointerDown={(e) => startResizing(e, block.id)}
         className="absolute w-3 h-3 bg-blue-500 rounded-full"
@@ -845,7 +850,7 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                 {/* BUTTON */}
                 {block.type === "button" && (
                   <div onClick={(e) => { e.stopPropagation(); setSelectedBlockId(block.id); }} className="relative inline-block" style={{ width: block.width, height: block.height === "auto" ? undefined : block.height }}>
-                    {selectedBlockId === block.id && (
+                    {selectedBlockId === block.id && !isPreview && (
                       <>
                         {/* <button onPointerDown={(e) => e.stopPropagation()} onClick={() => deleteBlock(block.id)} className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-7 h-7">✖</button> */}
                         <div onPointerDown={(e) => startResizing(e, block.id)} className="absolute bottom-0 right-0 w-3 h-3 bg-blue-800 rounded-full" style={{ transform: "translate(50%,50%)", cursor: "se-resize" }} />

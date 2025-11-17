@@ -11,6 +11,7 @@ export default function DraggableBlock({
   toolbar,
   onStartResize,
   onSelect,
+  isPreview,
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: String(id),
@@ -50,7 +51,9 @@ export default function DraggableBlock({
       )}
 
       {/* === DRAG HANDLE === */}
+      {!isPreview && (
       <button
+        data-editor-ui
         {...listeners}
         {...attributes}
         onClick={(e) => e.stopPropagation()}
@@ -61,6 +64,7 @@ export default function DraggableBlock({
       >
         <GripVertical className="w-4 h-4 text-gray-600" />
       </button>
+    )}
 
       {/* === CONTENT === */}
       <div className="relative">

@@ -85,19 +85,19 @@ const HeroBlock = ({
     >
       {/* Hero Text Section */}
       <div className="flex-1 text-center md:text-left space-y-4">
-        {editingTitle ? (
+        {editingTitle ? !isPreview && (
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          onBlur={() => setEditingTitle(false)}
+          onBlur={() => !isPreview ? setEditingTitle(false) : setEditingTitle(false)}
           autoFocus
           className="text-3xl font-bold border-b border-gray-300 focus:outline-none"
         />
       ) : (
         <h1
-          contentEditable
-          suppressContentEditableWarning
+          contentEditable={!isPreview}
+          suppressContentEditableWarning={true}
         //   onInput={(e) => handleChange("title", e.currentTarget.textContent)}
           className="text-4xl font-bold outline-none"
           style={{ 
@@ -106,27 +106,27 @@ const HeroBlock = ({
             fontSize : titleSize || 30 ,
             fontWeight : titleBold ? "bold" : "normal",
            }}
-          onClick={() => setEditingTitle(true)}
+          onClick={() => !isPreview ? setEditingTitle(true) : setEditingTitle(false)}
         >
           {title}
         </h1>
       )}
 
-        {editingsubTitle ? (
+        {editingsubTitle ? !isPreview && (
         <input
           type="text"
           value={subtitle}
           onChange={(e) => setSubtitle(e.target.value)}
-          onBlur={() => setEditingsubTitle(false)}
+          onBlur={() => !isPreview ? setEditingsubTitle(false) : setEditingsubTitle(false)}
           autoFocus
           className="text-3xl font-bold border-b border-gray-300 focus:outline-none"
         />
       ) : (
         <p
-          contentEditable
-          suppressContentEditableWarning
+          contentEditable={!isPreview}
+          suppressContentEditableWarning={true}
           onInput={(e) => handleChange("subtitle", e.currentTarget.textContent)}
-          onClick={() => setEditingsubTitle(true)}
+          onClick={() => !isPreview ? setEditingsubTitle(true) : setEditingTitle(false)}
           className="text-gray-600 text-lg outline-none"
           style={{
             fontFamily : fontFamily || "serif",
@@ -151,8 +151,8 @@ const HeroBlock = ({
             style={{
             color: buttonTextColor || "#fff",
             }}
-            contentEditable
-            suppressContentEditableWarning
+            contentEditable={!isPreview}
+            suppressContentEditableWarning={true}
             onBlur={(e) => setButtonText(e.currentTarget.textContent)}
             className="outline-none"
           >
@@ -174,14 +174,14 @@ const HeroBlock = ({
         height: `${imgHeight}px`,
         objectFit: "cover",
         borderRadius: "10px",
-        border: selectedImage ? "2px solid #007bff" : "none",
+        border: selectedImage && !isPreview ? "2px solid #007bff" : "none",
         cursor: "pointer",
       }}
       onClick={() => setSelectedImage(!selectedImage)}
     />
 
     {/* Show controls ONLY if the image is selected */}
-    {selectedImage && (
+    {selectedImage && !isPreview && (
       <div className="flex flex-col gap-2 mt-3 bg-white p-3 rounded-lg shadow-md border">
         <label className="cursor-pointer text-sm font-medium text-blue-600">
           Change Image
