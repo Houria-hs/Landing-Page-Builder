@@ -12,12 +12,14 @@ export default function DraggableBlock({
   onStartResize,
   onSelect,
   isPreview,
+
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: String(id),
   });
   
-  
+
+
   const style = {
     position: "absolute",
     left: x,
@@ -39,6 +41,7 @@ export default function DraggableBlock({
       }}
       className="relative block group"
     >
+
       {/* === TOOLBAR === */}
       {isEditing && toolbar && (
         <div

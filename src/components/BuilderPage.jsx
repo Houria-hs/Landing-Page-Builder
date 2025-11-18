@@ -1,4 +1,4 @@
-import React, { useState , useEffect} from "react";
+import React, { useState , useEffect , useRef} from "react";
 import DraggableBlock from "./dragg";
 import NavbarBlock from "./BuiltinNav";
 import FormBlock from "./FormBlock";
@@ -18,6 +18,11 @@ export default function Builder() {
 
   // profile image 
   const profileImg = localStorage.getItem("profileImg");
+
+ const [isPreview, setIsPreview] = useState(false)
+  // responsive preview toggle
+  const [RSpreviewMode, setRSpreviewMode] = useState("desktop");
+
 
 
  const [blocks, setBlocks] = useState(() => {
@@ -62,10 +67,7 @@ useEffect(() => {
   );
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   const selectedBlock = blocks.find((b) => b.id === selectedBlockId);
-  // preview mode
-  const [isPreview, setIsPreview] = useState(false)
-  // responsive preview toggle
-  const [RSpreviewMode, setRSpreviewMode] = useState("desktop");
+ 
   // sensors for drag and drop
   const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
   // const sensors = isPreview
@@ -379,6 +381,7 @@ useEffect(() => {
   const handleDragEnd = (event) => {
     const { delta } = event;
     const id = event.active?.id;
+
     if (!id) return;
     setBlocks((prev) =>
       prev.map((b) =>
@@ -676,10 +679,12 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
 
         
         {/* where the drag and drop is possible */}
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd} >
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>         
           <div 
+          id="page-canvas" 
           style={{
-            
+            display: "flex", 
+    flexDirection: "column",
           transform:!isPreview ? "scale(0.7)" : "scale(1)" ,
           transformOrigin: "top center",
           // width : "100%",
@@ -698,17 +703,12 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
         : "7.4rem",
           overflow: "visible" ,
           backgroundColor: bgColor || "#fff",
-          minHeight: `${canvasHeight}px` || "1200px",
+          minHeight: `${canvasHeight}px` || "1600px",
           transition: "height 0.3s ease",          
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between", // footer sticks to bottom
           flexGrow: 1,
           }}
-          id="page-canvas" 
           className={`canvas-area mt-1 mx-auto relative origin-top transition-transform duration-300 rounded-xl border border-gray-300 shadow-inner p-6 
           ${!isPreview ? "ml-29" : "ml-0"}`}>
-
 
             {/* NAVBAR (non-draggable, always on top) */}
             {navbarBlock && (
@@ -744,6 +744,7 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
               )}
             </div>
             )}
+
             
             {blocks.map((block) => (
 
@@ -758,7 +759,9 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                 isEditing={selectedBlockId === block.id}
                 onStartResize={!isPreview ? startResizing : undefined}
                 onSelect={selectBlock}
-              >
+                onDragEnd={handleDragEnd}
+               >
+
                 
                 {/* TEXT */}
                 {block.type === "text" && (
@@ -1030,6 +1033,7 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                     setSelectedBlockId(block.id);
                   }}
                   style={{
+                    marginTop : "auto",
                     position: "relative",
                     bottom: 0,
                     width: "100%",
