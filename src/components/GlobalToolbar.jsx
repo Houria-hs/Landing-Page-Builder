@@ -1,563 +1,433 @@
-import React from 'react'
-import FontSelector from './FontSelector';
-const GlobalToolbar = ({
-  isPreview,
-  selectedBlock,
-  updateBlock,
-  handleImageUpload,
-  duplicateBlock,
-  deleteBlock,
+import React from "react";
+import AlignmentControls from "./Alignment";
+import FontSelector from "./FontSelector";
 
+const GlobalToolbar = ({
+  isPreview,
+  selectedBlock,
+  updateBlock,
+  handleImageUpload,
+  duplicateBlock,
+  deleteBlock,
+  selectedPropertyKey,
 }) => {
 
-     if (isPreview || !selectedBlock) return null;
-  return (
-          <div
-            className="toolbar  fixed top-3 left-[60%] -translate-x-1/2 bg-white shadow-lg rounded-lg px-4 py-2 flex items-center gap-2 z-50"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            {/* width  */}
-            <div className="flex items-center flex-col">
-              <input
-                onPointerDown={(e) => e.stopPropagation()}
-                type="number"
-                value={selectedBlock.width}
-                onChange={(e) => updateBlock(selectedBlock.id, "width", e.target.value === "" ? "" : Number(e.target.value))}
-                className="border rounded p-1 w-15"
-              />
-              <label className="text-sm text-gray-700">Width</label>
-            </div>
-            {/* height */}
-            <div className="flex items-center flex-col">
-              <input
-                onPointerDown={(e) => e.stopPropagation()}
-                type="number"
-                value={selectedBlock.height === "auto" ? "" : selectedBlock.height}
-                onChange={(e) => updateBlock(selectedBlock.id, "height", e.target.value === "" ? "auto" : Number(e.target.value))}
-                className="border rounded p-1 w-15"
-              />
-              <label className="text-sm text-gray-700">Height</label>
-            </div>
-            {selectedBlock.type === "text" && (
-              <>
-            <FontSelector
-              selectedFont={selectedBlock?.fontFamily || "Inter"}
-              onChange={(font) => updateBlock(selectedBlock.id, "fontFamily", font)}
-            />
-                {/* textcolor */}
-                <input onPointerDown={(e) => e.stopPropagation()} type="color" value={selectedBlock.color} onChange={(e) => updateBlock(selectedBlock.id, "color", e.target.value)} />
-                {/* fonstise */}
-                <div className="flex items-center gap-2">
-                  <label className="text-sm text-gray-600">Font</label>
-                  <input
-                    onPointerDown={(e) => e.stopPropagation()}
-                    type="number"
-                    min={1}
-                    value={selectedBlock.fontSize || 16}
-                    onChange={(e) => updateBlock(selectedBlock.id, "fontSize",Number(e.target.value))}
-                    className="border rounded p-1 w-16"
-                  />
-                </div>
+  if (isPreview || !selectedBlock) return null;
+    const IconTrash = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-trash">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+    );
 
-                <textarea onPointerDown={(e) => e.stopPropagation()} value={selectedBlock.content} onChange={(e) => updateBlock(selectedBlock.id, "content", e.target.value)} className="border rounded p-1" />
+    const IconCopy = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-copy">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+    );
 
-               {/* bold */}
-                <button
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={() => updateBlock(selectedBlock.id, "bold", !selectedBlock.bold)}
-                  className={`px-2 py-1 border rounded-lg transition-all duration-150 hover:bg-gray-100 ${
-                    selectedBlock.bold ? "bg-gray-800 text-white" : "bg-white text-gray-700"
-                  }`}
-                >
-                  <b>B</b>
-                </button>
-                {/* alignment */}
-                <div className="flex items-center gap-2">
+
+ // --- CONFIG ---
+const ELEMENT_CONFIGS = {
+    //  Base styles for the block container itself
+    self: [ 
+        { type: "number", name: "width", label: "Width" },
+        { type: "number", name: "height", label: "Height" },
+        { type: "color", name: "bgColor", label: "BG Color" },
+    ],
+    //  Base text styles (for simple text blocks)
+    text: [ 
+        { type: "number", name: "fontSize", label: "Font Size" },
+        { type: "color", name: "color", label: "Color" },
+    ],
+    // 💡 Base button styles (for simple button blocks)
+    button: [ 
+        { type: "color", name: "buttonColor", label: "BG Color" },
+        { type: "color", name: "buttonTextColor", label: "Text Color" },
+    ],
+    // 💡 Base image styles (for simple image blocks)
+    image: [
+        { type: "number", name: "imgWidth", label: "Width" },
+        { type: "number", name: "imgHeight", label: "Height" },
+    ],
+};
+
+const TOOLBAR_CONFIG = {
+    'text:self': [
+        ...(ELEMENT_CONFIGS.self || []), 
+        ...(ELEMENT_CONFIGS.text || []),
+       { type: "font" },
+       { type: "align" },
+    ],
+    'button:self': [
+        ...(ELEMENT_CONFIGS.self || []), 
+        ...(ELEMENT_CONFIGS.button || []),
+    ],
+    'image:self': [
+        ...(ELEMENT_CONFIGS.self || []), 
+        ...(ELEMENT_CONFIGS.image || []),
+        { type: "button", label: "Clear Image", action: "clearImage" },
+    ],
+
+    // Navbar styling 
+    'navbar:self': [
+        ...(ELEMENT_CONFIGS.self || []), 
+        
+    ],
+    
+    'navbar:logoText': [
+        { type: "font" , name : "logoFamily" , label : "FontFamily" },
+        { type: "number", name: "logoFontSize", label: "Font Size" },
+        { type: "color", name: "logoColor", label: "Color" },
+        { type: "toggle", name: "logoBold", label: "Bold" },
+    ],
+    'navbar:Links': [
+        { type: "font" , name : "LinksFamily" , label : "FontFamily" },
+        { type: "number", name: "linksFontSize", label: "Font Size" },
+        { type: "color", name: "linkColor", label: "Color" },
+        { type: "toggle", name: "linksBold", label: "Bold" },
+    ],
+    'navbar:CTA': [
+        { type: "font" , name : "CTAFamily" , label : "FontFamily" },
+        { type: "number", name: "ctaFontSize", label: "Font Size" },
+        { type: "color", name: "ctaTextColor", label: "Text color" },
+        { type: "color", name: "ctaBgColor", label: "BG color" },
+        { type: "toggle", name: "ctaBold", label: "Bold" },
+    ],
+    
+
+    // --- Complex Block: HERO (Styling only) ---
+    'hero:self': [
+        ...(ELEMENT_CONFIGS.self || []), 
+        { type: "align" }, 
+        
+    ],
+
+    'hero:title': [
+        { type: "font" , name : "TitlefontFamily" , label : "FontFamily" },
+        { type: "number", name: "titleSize", label: "Font Size" },
+        { type: "color", name: "titleColor", label: "Color" },
+        { type: "toggle", name: "titleBold", label: "Bold" },
+    ],
+
+    'hero:subtitle': [
+        { type: "font" , name : "SubfontFamily" , label : "FontFamily" },
+        { type: "number", name: "subtitleSize", label: "Font Size" },
+        { type: "color", name: "subtitleColor", label: "Color" },
+        { type: "toggle", name: "subtitleBold", label: "Bold" },
+    ],
+
+    'hero:buttonStyle': [
+        { type: "font" , name : "BtnfontFamily" , label : "FontFamily" },
+        { type: "color", name: "buttonColor", label: "BG Color", big: true },
+        { type: "color", name: "buttonTextColor", label: "Text Color", big: true },
+        { type: "number", name: "buttonTextSize", label: "Font Size" },
+        { type: "toggle", name: "buttonBold", label: "Bold" },
+    ],
+    
+    // Image Styling
+    'hero:image': [
+        ...(ELEMENT_CONFIGS.image || []),
+        { type: "button", label: "Clear Image", action: "clearImage" },
+    ],
+
+        // --- Complex Block: ABOUT (Styling only) ---
+        'aboutSection:self': [
+            ...(ELEMENT_CONFIGS.self || []),
+            { type: "align" }, 
+        ],
+
+    'aboutSection:title': [
+        { type: "font" , name : "TitlefontFamily" , label : "FontFamily" },
+        { type: "number", name: "titleSize", label: "Font Size" },
+        { type: "color", name: "titleColor", label: "Color" },
+        { type: "toggle", name: "titleBold", label: "Bold" },
+    ],
+
+    'aboutSection:Description': [
+        { type: "font" , name : "SubfontFamily" , label : "FontFamily" },
+        { type: "number", name: "descriptionSize", label: "Font Size" },
+        { type: "color", name: "descriptionColor", label: "Color" },
+        { type: "toggle", name: "descriptionBold", label: "Bold" },
+    ],
+
+    'aboutSection:buttonStyle': [
+        // Label field removed for in-line editing (if you want text styles for the button, use 'buttonText' key)
+        { type: "font" , name : "BtnfontFamily" , label : "FontFamily" },
+        { type: "color", name: "buttonColor", label: "BG Color", big: true },
+        { type: "color", name: "buttonTextColor", label: "Text Color", big: true },
+        { type: "number", name: "buttonTextSize", label: "Font Size" },
+        { type: "toggle", name: "buttonBold", label: "Bold" },
+    ],
+        'aboutSection:image': [
+            ...(ELEMENT_CONFIGS.image || []),
+            { type: "button", label: "Clear Image", action: "clearImage" },
+        ],
+
+
+        // --- Complex Block: portfolio (Styling only) ---
+        'portfolio:self': [
+            ...(ELEMENT_CONFIGS.self || []),
+            { type: "align" }, 
+        ],
+
+        'portfolio:title': [
+        { type: "font" , name : "titeFontFamily" , label : "FontFamily" },
+        { type: "number", name: "titleSize", label: "Font Size" },
+        { type: "color", name: "titleColor", label: "Color" },
+        { type: "toggle", name: "titleBold", label: "Bold" },
+    ],
+
+    'portfolio:subtitle': [
+        { type: "font" , name : "SubtiteFontFamily" , label : "FontFamily" },
+        { type: "number", name: "subtitleSize", label: "Font Size" },
+        { type: "color", name: "subtitleColor", label: "Color" },
+        { type: "toggle", name: "subtitleBold", label: "Bold" },
+    ],
+
+    'portfolio:buttonStyle': [
+    { type: "font" , name : "cardBtnFontFamily" , label : "FontFamily" },
+    { type: "color", name: "cardButtonColor", label: "BG Color", big: true },
+    { type: "color", name: "cardButtonTextColor", label: "Text Color", big: true },
+    { type: "number", name: "cardBtnSize", label: "Font Size" },
+    { type: "toggle", name: "cardBtnBold", label: "Bold" },
+
+    ],
+    'portfolio:cardTitle': [
+        { type: "font" , name : "cardTitleFontFamily" , label : "FontFamily" },
+        { type: "number", name: "cardTitleSize", label: "Font Size" },
+        { type: "color", name: "cardTitleColor", label: "Color" },
+        { type: "toggle", name: "cardTitleBold", label: "Bold" },
+    ],
+    'portfolio:cardDescription': [
+        { type: "font" , name : "cardSubFontFamily" , label : "FontFamily" },
+        { type: "number", name: "cardSubtitleSize", label: "Font Size" },
+        { type: "color", name: "cardSubtitleColor", label: "Color" },
+        { type: "toggle", name: "cardSubtitleBold", label: "Bold" },
+    ],
+
+
+     // --- Complex Block: portfolio (Styling only) ---
+    'form:self': [
+        ...(ELEMENT_CONFIGS.self || []),
+    ],
+    'form:FieldsLabel': [
+      { type: "font" , name : "labelFont" , label : "FontFamily" },
+      { type: "number", name: "labelSize", label: "Font Size" },
+      { type: "color", name: "labelolor", label: "Color" },
+      { type: "toggle", name: "labelBold", label: "Bold" },
+    ],
+    'form:buttonStyle': [
+      { type: "font" , name : "btnFont" , label : "FontFamily" },
+      { type: "number", name: "btnFontSize", label: "Font Size" },
+      { type: "color", name: "buttonColor", label: "BG Color" },
+      { type: "color", name: "btnTextColor", label: "Text Color" },
+      { type: "toggle", name: "Bold", label: "Bold" },
+    ],
+
+    // Footer styling 
+    'footer:self': [
+        ...(ELEMENT_CONFIGS.self || []), 
+    ],
+    'footer:ContentStyle': [
+      { type: "font" , name : "footerFont" , label : "FontFamily" },
+      { type: "number", name: "textFontSize", label: "Font Size" },
+      { type: "color", name: "bgColor", label: "BG Color" },
+      { type: "color", name: "textColor", label: "Text Color" },
+      { type: "toggle", name: "textBold", label: "Bold" },
+    ],
+};
+    // --- END CONFIG ---
+
+
+    const blockType = selectedBlock.type;
+    const propertyKey = selectedPropertyKey || 'self'; 
+    const configKey = `${blockType}:${propertyKey}`; 
+
+    const config = TOOLBAR_CONFIG[configKey] || [];
+
+    const isParentBlock = propertyKey === 'self';
+
+
+
+
+  return (
+<div
+  className="fixed top-21 right-70 bg-white/90 backdrop-blur-md 
+             shadow-[0_4px_20px_rgba(0,0,0,0.1)] 
+             px-4 py-2 rounded-2xl z-50 
+             flex items-center gap-3 
+             overflow-x-auto whitespace-nowrap
+             border border-gray-200"
+  onPointerDown={(e) => e.stopPropagation()}
+  onMouseDown={(e) => e.stopPropagation()}
+>
+  {config.map((item, index) => (
+    <ToolbarField
+      key={index}
+      item={item}
+      selectedBlock={selectedBlock}
+      updateBlock={updateBlock}
+      handleImageUpload={handleImageUpload}
+    />
+  ))}
+
+  {/* Divider */}
+  <div className="h-6 w-px bg-gray-300 mx-2 opacity-60"></div>
+
+  {/* if the selected block is a parent block show the duplicate and delete buttons */}
+{isParentBlock && (
+  <div className="flex items-center gap-2">
+  {/* Duplicate */}
   <button
-    onPointerDown={(e) => e.stopPropagation()}
-    onClick={() => updateBlock(selectedBlock.id, "textAlign", "left")}
-    className={`px-2 py-1 border rounded-md text-sm ${
-      selectedBlock.textAlign === "left"
-        ? "bg-gray-900 text-white border-gray-900"
-        : "bg-white text-gray-700 hover:bg-gray-100"
-    }`}
+  
+    onClick={() => duplicateBlock(selectedBlock.id )}
+    className="p-2 rounded-xl border  active:scale-95 
+               border-pink-200 
+               hover:bg-pink-50 active:scale-95 
+               transition-all shadow-sm"
+    title="Duplicate Block"
   >
-    ⬅
+    <IconCopy className="w-5 h-5 text-gray-700" />
   </button>
-
+  {/* Delete */}
   <button
-    onPointerDown={(e) => e.stopPropagation()}
-    onClick={() => updateBlock(selectedBlock.id, "textAlign", "center")}
-    className={`px-2 py-1 border rounded-md text-sm ${
-      selectedBlock.textAlign === "center"
-        ? "bg-gray-900 text-white border-gray-900"
-        : "bg-white text-gray-700 hover:bg-gray-100"
-    }`}
+    onClick={() => deleteBlock(selectedBlock.id )}
+    className="p-2 rounded-xl border border-red-200 
+               hover:bg-red-50 active:scale-95 
+               transition-all shadow-sm"
+    title="Delete Block"
   >
-    ⬍
+    <IconTrash className="w-5 h-5 text-red-500" />
   </button>
+  </div>
+  )}
+</div>
 
-  <button
-    onPointerDown={(e) => e.stopPropagation()}
-    onClick={() => updateBlock(selectedBlock.id, "textAlign", "right")}
-    className={`px-2 py-1 border rounded-md text-sm ${
-      selectedBlock.textAlign === "right"
-        ? "bg-gray-900 text-white border-gray-900"
-        : "bg-white text-gray-700 hover:bg-gray-100"
-    }`}
-  >
-    ➡
-  </button>
-                </div>
+  );
+};
 
-              </>
-            )}
-            {selectedBlock.type === "button" && (
-              <>
-              {/* fonstise */}
-                <div className=" text-center gap-2">
-                  <input
-                    onPointerDown={(e) => e.stopPropagation()}
-                    type="number"
-                    min={1}
-                    value={selectedBlock.fontSize || 16}
-                    onChange={(e) => updateBlock(selectedBlock.id, "fontSize",Number(e.target.value))}
-                    className="border rounded p-1 w-16"
-                  />
-                  <label className="text-sm text-gray-600">FontSize</label>
 
-                </div>
+// =========================
+// FIELD RENDERER (FIXED)
+// =========================
+const ToolbarField = ({ item, selectedBlock, updateBlock }) => {
+    //  Prioritize item.type for custom components (like font/align/toggle/button), 
+    //    and fall back to item.input for standard HTML inputs (number/color/text/textarea).
+    const type = item.type || item.input;
+    const field = item.name || item.field; // Use 'name' from new config, fallback to 'field'
+    const { label, action } = item;
+    
+    const stop = (e) => e.stopPropagation();
+
+    switch (type) {
+
+      case "number":
+        return (
+        <div className="flex flex-col items-center">
+          <input
+            onPointerDown={stop}
+            type="number"
+            value={selectedBlock[field] || ""}
+            onChange={(e) => updateBlock(selectedBlock.id, field, Number(e.target.value))}
+            className="border rounded p-1 w-16"
+          />
+          <label className="text-sm">{label}</label>
+        </div>
+      );
+
+    case "color":
+      return (
+        <div className="flex flex-col items-center">
+          <input
+            onPointerDown={stop}
+            type="color"
+            value={selectedBlock[field] || "#000000"} // Added fallback for color
+            onChange={(e) => updateBlock(selectedBlock.id, field, e.target.value)}
+            className={item.big ? "w-16 h-10" : ""}
+          />
+          <label className="text-sm">{label}</label>
+        </div>
+      );
+
+    case "toggle":
+      return (
+        <button
+          onPointerDown={stop}
+          // 👇 Use 'field' variable here
+          onClick={() =>
+            updateBlock(selectedBlock.id, field, !selectedBlock[field])
+          }
+          className={`px-2 py-1 border rounded ${
+            selectedBlock[field] ? "bg-pink-500 text-white" : "border-pink-200 hover:bg-pink-50"
+          }`}
+        >
+          {label}
+        </button>
+      );
+
+    case "font":
+      return (
               <FontSelector
               selectedFont={selectedBlock?.fontFamily || "Inter"}
               onChange={(font) => updateBlock(selectedBlock.id, "fontFamily", font)}
             />
-            
-               {/* bold */}
-                <button
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={() => updateBlock(selectedBlock.id, "bold", !selectedBlock.bold)}
-                  className={`px-2 py-1 border rounded-lg transition-all duration-150 hover:bg-gray-100 ${
-                    selectedBlock.bold ? "bg-gray-800 text-white" : "bg-white text-gray-700"
-                  }`}
-                >
-                  <b>B</b>
-                </button>
-                <input onPointerDown={(e) => e.stopPropagation()} type="color" value={selectedBlock.color} onChange={(e) => updateBlock(selectedBlock.id, "color", e.target.value)} />
-                <input onPointerDown={(e) => e.stopPropagation()} type="text" value={selectedBlock.label} onChange={(e) => updateBlock(selectedBlock.id, "label", e.target.value)} className="border rounded p-1" />
-              </>
-              
-            )}
-            {selectedBlock.type === "image" && (
-              <>
-                {/* <input
-                  onPointerDown={(e) => e.stopPropagation()}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files?.[0]) handleImageUpload(selectedBlock.id, e.target.files[0]);
-                  }}
-                /> */}
-                <button onClick={() => updateBlock(selectedBlock.id, "src", null)} className="px-2 py-1 bg-gray-100 rounded">
-                  Clear
-                </button>
-              </>
-            )}
-            {selectedBlock.type === "navbar" && (
-  <>
-    {/* links fontsize */}
-    <div className="flex items-center flex-col">
-      <input
-        onPointerDown={(e) => e.stopPropagation()}
-        type="number"
-        min={1}
-        value={selectedBlock.linksFontSize || 16}
-        onChange={(e) => updateBlock(selectedBlock.id, "linksFontSize",Number(e.target.value))}
-        className="border rounded p-1 w-16"
-      />
-      <label className="text-sm text-gray-700">links</label>
+      );
 
-    </div>
-    {/* ctafontsize */}
-    <div className="flex items-center flex-col">
-      <input
-        onPointerDown={(e) => e.stopPropagation()}
-        type="number"
-        min={1}
-        value={selectedBlock.ctaFontSize || 16}
-        onChange={(e) => updateBlock(selectedBlock.id, "ctaFontSize",Number(e.target.value))}
-        className="border rounded p-1 w-16"
-      />
-      <label className="text-sm text-gray-700">cta</label>
-    </div>
-    {/* logo fontsize */}
-    <div className="flex items-center flex-col">
-      <input
-        onPointerDown={(e) => e.stopPropagation()}
-        type="number"
-        min={1}
-        value={selectedBlock.logoFontSize || 16}
-        onChange={(e) => updateBlock(selectedBlock.id, "logoFontSize",Number(e.target.value))}
-        className="border rounded p-1 w-16"
-      />
-      <label className="text-sm text-gray-700">Logo</label>
-    </div>
-    {/* button background */}
-    <div className="flex items-center flex-col">
-      <input
-        type="color"
-        value={selectedBlock.ctaBgColor}
-        onChange={(e) => updateBlock(selectedBlock.id, "ctaBgColor", e.target.value)}
-      />
-      <label className="text-sm text-gray-700">Btn BG</label>
-    </div>
-    {/* btn text color */}
-    <div className="flex items-center flex-col">
-      <input
-        type="color"
-        value={selectedBlock.ctaTextColor}
-        onChange={(e) => updateBlock(selectedBlock.id, "ctaTextColor", e.target.value)}
-      />
-      <label className="text-sm text-gray-700">Btn Text</label>
-    </div>
-    {/* links color */}
-    <div className="flex items-center flex-col">
-      <input
-        type="color"
-        value={selectedBlock.linkColor}
-        onChange={(e) => updateBlock(selectedBlock.id, "linkColor", e.target.value)}
-      />
-      <label className="text-sm text-gray-700">links</label>
-    </div>
-    {/* logo color */}
-    <div className="flex items-center flex-col">
-      <input
-        type="color"
-        value={selectedBlock.logoColor}
-        onChange={(e) => updateBlock(selectedBlock.id, "logoColor", e.target.value)}
-      />
-      <label className="text-sm text-gray-700">logo</label>
-    </div>
+    case "align":
+      return (
+        <AlignmentControls
+          selectedBlock={selectedBlock} 
+          updateBlock={updateBlock}
+        />
+      );
 
-    {/* bold */}
+    case "button":
+      return (
+        <button
+          onPointerDown={stop}
+          onClick={() => {
+            if (action === "clearImage")
+              // 💡 Use 'imageUrl' as the field for hero block image clearing
+              return updateBlock(selectedBlock.id, "imageUrl", null); 
 
-    {/* logo */}
-    <button
-      onClick={() =>
-         updateBlock(selectedBlock.id, "logoBold", !selectedBlock.logoBold
-         )}
-      className={`px-2 py-1 border rounded ${selectedBlock.logoBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-    >
-      <b>B</b> Logo
-    </button>
-    {/* btn */}
-    <button
-      onClick={() => updateBlock(selectedBlock.id, "ctaBold", !selectedBlock.ctaBold)}
-      className={`px-2 py-1 border rounded ${selectedBlock.ctaBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-    >
-      <b>B</b> Button
-    </button>
-    {/* links */}
-    <button
-      onClick={() => updateBlock(selectedBlock.id, "linksBold", !selectedBlock.linksBold)}
-      className={`px-2 py-1 border rounded ${selectedBlock.linksBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-    >
-      <b>B</b> Links
-    </button>
-  </>
-            )}
-            {selectedBlock.type === "footer" && (
-            <>
-    <div className="flex items-center gap-2">
-    <div className="flex items-center gap-2">
-      <label className="text-sm text-gray-600">FontSize</label>
-      <input
-        onPointerDown={(e) => e.stopPropagation()}
-        type="number"
-        min={1}
-        value={selectedBlock.textFontSize || 16}
-        onChange={(e) => updateBlock(selectedBlock.id, "textFontSize",Number(e.target.value))}
-        className="border rounded p-1 w-16"
-      />
-      </div>
-      <label className="text-sm text-gray-600">Color</label>
-      <input
-        type="color"
-        value={selectedBlock.textColor}
-        onChange={(e) => updateBlock(selectedBlock.id, "textColor", e.target.value)}
-      />
-    </div>
-    <button
-      onClick={() => updateBlock(selectedBlock.id, "textBold", !selectedBlock.textBold)}
-      className={`px-2 py-1 border rounded ${selectedBlock.textBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-    >
-      <b>B</b> 
-    </button>
-  </>
-            )}
-            {selectedBlock?.type === "form" && (
-              <>
-    
-              <div className="space-y-2">
+            if (action === "addFormField")
+              return updateBlock(selectedBlock.id, "fields", [
+                ...selectedBlock.fields,
+                { id: Date.now(), label: "New Field", type: "text", value: "" },
+              ]);
+          }}
+          className="px-2 py-1 bg-pink-100 text-pink-700 rounded border border-pink-200 hover:bg-pink-200"
+        >
+          {label}
+        </button>
+      );
 
-              </div>
-              {/* btnfontsize */}
-                <div className="flex items-center flex-col">
-      <input
-        onPointerDown={(e) => e.stopPropagation()}
-        type="number"
-        min={1}
-        value={selectedBlock.btnFontSize || 16}
-        onChange={(e) => updateBlock(selectedBlock.id, "btnFontSize",Number(e.target.value))}
-        className="border rounded p-1 w-16"
-      />
-      <label className="text-sm text-gray-700">cta</label>
-                </div>
-                
-                {/* button background */}
-                <div className="flex items-center flex-col">
-      <input
-        type="color"
-        value={selectedBlock.buttonColor}
-        style={{width: "4rem" , height:"2.5rem"}}
-        onChange={(e) => updateBlock(selectedBlock.id, "buttonColor", e.target.value)}
-      />
-      <label className="text-sm text-gray-700">Btn BG</label>
-                </div>
-                 {/* btn text color */}
-                <div className="flex items-center flex-col">
-      <input
-        type="color"
-        style={{width: "4rem" , height:"2.5rem"}}
-        value={selectedBlock.btnTextColor}
-        onChange={(e) => updateBlock(selectedBlock.id, "btnTextColor", e.target.value)}
-      />
-      <label className="text-sm text-gray-700">Btn Text</label>
-                </div>
-                {/* bold toggle */}
-                <button
-      onClick={() =>
-         updateBlock(selectedBlock.id, "Bold", !selectedBlock.Bold
-         )}
-      className={`px-2 py-1 border rounded ${selectedBlock.Bold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-    >
-      <b>B</b> 
-                </button>
-                {/* add field */}
-                <button
-      onClick={() =>
-        updateBlock(selectedBlock.id, "fields", [
-          ...selectedBlock.fields,
-          { id: Date.now(), label: "New Field", type: "text", value: "" },
-        ])
-      }
-      className="bg-gray-800 text-white px-2 py-2 rounded w-30"
-    >
-      + Add Field
-                </button>
-                
-              </>
-            )}
-            {selectedBlock?.type === "hero" && (
-              // bold
-              <>
-            <FontSelector
-              selectedFont={selectedBlock?.fontFamily || "Inter"}
-              onChange={(font) => updateBlock(selectedBlock.id, "fontFamily", font)}
-            />
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "titleBold", !selectedBlock.titleBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.titleBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Title
-              </button>
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "subtitleBold", !selectedBlock.subtitleBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.subtitleBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Subtitle
-              </button>
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "buttonBold", !selectedBlock.buttonBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.buttonBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Btn
-              </button>
-              {/* text fontsize */}
-               <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.titleSize || 30}
-                  onChange={(e) => updateBlock(selectedBlock.id, "titleSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Title</label>
-              </div>
-              <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.subtitleSize || 16}
-                  onChange={(e) => updateBlock(selectedBlock.id, "subtitleSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Subtitle</label>
-              </div>
-              <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.buttonTextSize || 16}
-                  onChange={(e) => updateBlock(selectedBlock.id, "buttonTextSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Button</label>
-              </div>
-             </>
-            )}
-            {selectedBlock?.type === "portfolio" && (
-              // bold
-              <>
-            <FontSelector
-              selectedFont={selectedBlock?.fontFamily || "serif"}
-              onChange={(font) => updateBlock(selectedBlock.id, "fontFamily", font)}
-            />
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "titleBold", !selectedBlock.titleBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.titleBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Title
-              </button>
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "subtitleBold", !selectedBlock.subtitleBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.subtitleBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Subtitle
-              </button>
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "buttonBold", !selectedBlock.buttonBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.buttonBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Btn
-              </button>
-              {/* text fontsize */}
-               <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.titleSize || 30}
-                  onChange={(e) => updateBlock(selectedBlock.id, "titleSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Title</label>
-              </div>
-              <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.subtitleSize || 16}
-                  onChange={(e) => updateBlock(selectedBlock.id, "subtitleSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Subtitle</label>
-              </div>
-              <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.buttonTextSize || 16}
-                  onChange={(e) => updateBlock(selectedBlock.id, "buttonTextSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Button</label>
-              </div>
-             </>
-            )}
-            {selectedBlock?.type === "aboutSection" && (
-              // bold
-              <>
-            <FontSelector
-              selectedFont={selectedBlock?.fontFamily || "serif"}
-              onChange={(font) => updateBlock(selectedBlock.id, "fontFamily", font)}
-            />
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "titleBold", !selectedBlock.titleBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.titleBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Title
-              </button>
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "descriptionBold", !selectedBlock.descriptionBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.descriptionBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Subtitle
-              </button>
-              <button
-                onClick={() => updateBlock(selectedBlock.id, "buttonBold", !selectedBlock.buttonBold)}
-                className={`px-2 py-1 border rounded ${selectedBlock.buttonBold ? "bg-gray-800 text-white" : "bg-white text-gray-700"}`}
-              >
-                <b>B</b> Btn
-              </button>
-              {/* text fontsize */}
-               <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.titleSize || 30}
-                  onChange={(e) => updateBlock(selectedBlock.id, "titleSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Title</label>
-              </div>
-              <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.descriptionSize || 16}
-                  onChange={(e) => updateBlock(selectedBlock.id, "descriptionSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Subtitle</label>
-              </div>
-              <div className="flex items-center flex-col">
-                <input
-                 onPointerDown={(e) => e.stopPropagation()}
-                  type="number"
-                  min={1}
-                  value={selectedBlock.buttonTextSize || 16}
-                  onChange={(e) => updateBlock(selectedBlock.id, "buttonTextSize",Number(e.target.value))}
-                  className="border rounded p-1 w-16"
-                />
-                <label className="text-sm text-gray-700">Button</label>
-              </div>
-             </>
-            )}
-            {/* duplicate a block */}
-            <button onClick={() => duplicateBlock(selectedBlock.id)}
-            className="px-2 py-1 border rounded-lg transition-all duration-150 hover:bg-gray-100"
-            >
-              D
-            </button>
-            {/* delete a block */}
-            <button
-              onClick={() => deleteBlock(selectedBlock.id)}
-              className="text-red-500 hover:text-red-700 transition-transform transform hover:scale-110"
-              title="Delete block"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-  )
-}
+    case "textarea":
+      return (
+        <textarea
+          onPointerDown={stop}
+          value={selectedBlock[field] || ""}
+          onChange={(e) => updateBlock(selectedBlock.id, field, e.target.value)}
+          className="border rounded p-1"
+        />
+      );
+
+    case "text":
+      return (
+        <input
+          onPointerDown={stop}
+          type="text"
+          value={selectedBlock[field] || ""}
+          onChange={(e) => updateBlock(selectedBlock.id, field, e.target.value)}
+          className="border rounded p-1"
+        />
+      );
+
+    default:
+      return null;
+  }
+};
 
 export default GlobalToolbar
