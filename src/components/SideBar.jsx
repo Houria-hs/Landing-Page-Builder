@@ -16,11 +16,10 @@ export default function Sidebar({
   const [showSections, setShowSections] = useState(false);
 
   const sections = [
-    { label: "Navbar", icon: <Navigation />, type: "navbar" },
     { label: "Hero Section", icon: <Image />, type: "hero" },
     { label: "About Section", icon: <User />, type: "aboutSection" },
     { label: "Portfolio Section", icon: <Briefcase />, type: "portfolio" },
-    { label: "Form", icon: <FileText />, type: "form" },
+    { label: "Navbar", icon: <Navigation />, type: "navbar" },
     { label: "Footer", icon: <LayoutTemplate />, type: "footer" },
   ];
 
@@ -28,7 +27,7 @@ export default function Sidebar({
     { label: "Text", icon: <Type />, type: "text" },
     { label: "Image", icon: <ImageIcon />, type: "image" },
     { label: "Button", icon: <MousePointerClick />, type: "button" },
-
+    { label: "Form", icon: <FileText />, type: "form" },
   ];
 
   return (
@@ -132,6 +131,8 @@ export default function Sidebar({
           >
             {[ 
               { label: "Body Background", value: bgColor, setValue: setBgColor },
+              { label: "Navbar Background", value: navBgColor, setValue: setNavBgColor },
+              { label: "Footer Background", value: footerBG, setValue: setFooterBG },
             ].map((item, index) => (
               <div key={index}>
                 <h3 className="text-sm font-semibold text-gray-600 mb-2">

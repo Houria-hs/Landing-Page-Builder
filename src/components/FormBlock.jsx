@@ -5,10 +5,23 @@ const FormBlock = ({
   id,
   fields,
   buttonText,
-  style,
   selected,
   onChange,
   isPreview ,
+  onElementSelect, 
+  selectedPropertyKey,
+width,
+height,
+labelSize,
+labelolor,
+labelBold,
+labelFont,
+buttonColor,
+bgColor,
+btnTextColor,
+Bold,
+btnFontSize,
+btnFont,
 }) => {
     const handleLabelChange = (index, newLabel) => {
     const updated = [...fields];
@@ -19,16 +32,40 @@ const FormBlock = ({
   const handleButtonTextChange = (newText) => {
     onChange(id, "buttonText", newText);
   };
+
+  const isSelected = (key) => selectedPropertyKey === key && selected;
+
+    //  New click handler to inform the parent component
+  const handleSelect = (e, propertyKey) => {
+        if (isPreview) return;
+        e.stopPropagation();
+        onElementSelect(id, propertyKey); // Calls selectElement(blockId, propertyKey) in Builder.jsx
+  };
+
 return (
   <div className="relative w-full max-w-md">
     {/* FORM ITSELF */}
     <div
       className="border rounded-2xl shadow-sm p-6 space-y-4 transition-all duration-300 bg-white"
-      style={style}
+      onClick={(e) => handleSelect(e, 'self')} 
+      style={{
+        width : width ,
+        height : height,
+        backgroundColor : bgColor || "transparent",
+        border: isSelected('self') && !isPreview ? '1px solid #007bff' : 'none',
+      }}
     >
       {fields.map((field, index) => (
         <div key={index} className="flex flex-col space-y-1">
-          <label className="text-sm font-medium text-gray-700">
+          <label className="text-sm font-medium text-gray-700"
+          onClick={(e) => handleSelect(e, 'FieldsLabel')} 
+          style={{
+            color : labelolor || "black",
+            fontSize : labelSize || 16,
+            fontWeight : labelBold ? "bold" : "normal",
+            fontFamily : labelFont || "sans-serif",
+          }}
+          >
             {field.label}
           </label>
           <input
@@ -41,12 +78,14 @@ return (
       {/* BUTTON */}
       <div className="pt-4">
         <button
+          onClick={(e) => handleSelect(e, 'buttonStyle')} 
           className="w-full rounded-lg py-2.5 text-sm font-semibold transition-all duration-300 hover:opacity-90"
           style={{
-            background: style?.buttonColor || "#2563eb",
-            color: style?.btnTextColor || "#fff",
-            fontSize: style?.btnFontSize || 14,
-            fontWeight : style?.Bold ? "bold" : "normal",
+            background : buttonColor || "#06276eff",
+            color : btnTextColor || "white",
+            fontSize : btnFontSize || 16,
+            fontWeight : Bold ? "bold" : "normal",
+            fontFamily : btnFont || "sans-serif",
           }}
         >
           {buttonText || "Submit"}

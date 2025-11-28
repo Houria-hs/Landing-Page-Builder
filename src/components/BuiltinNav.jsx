@@ -2,13 +2,15 @@ import React, { useRef } from "react";
 import { Image, Type, Trash } from "lucide-react"; // add nice icons
 
 export default function NavbarBlock({
+  id,
   block = {},
   isEditing = false,
   onUpdate = () => {},
   onUploadLogo = () => {},
-  onSelect = () => {},
-  isPreview = () => {}
-}) {
+  isPreview,
+onElementSelect, 
+selectedPropertyKey, 
+selected,}) {
   const fileRef = useRef(null);
 
   const {
@@ -18,28 +20,53 @@ export default function NavbarBlock({
     showCTA = true,
     ctaLabel = "Sign up",
     height = 64,
+    center = false ,
+    bgColor = "white",
   } = block || {};
 
   const triggerLogoFile = () => fileRef.current?.click();
 
+  const isSelected = (key) => selectedPropertyKey === key && selected;
+  
+  const handleSelect = (e, propertyKey) => {
+    if (isPreview) return; 
+    e.stopPropagation();
+    e.preventDefault(); 
+    onElementSelect(id, propertyKey); 
+  };
+
   return (
-    <div className="relative">
+    <div className="relative"
+    >
       {/* === NAVBAR === */}
       <header
-        onClick={(e) => {
-          e.stopPropagation();
-          onSelect && onSelect();
-        }}
+        // onClick={(e) => {
+        //   e.stopPropagation();
+        //   onSelect && onSelect();
+        // }}
+    onClick={(e) => 
+      handleSelect(e, 'self')
+    }
+    style={{
+            //       height : height,
+            // margin : center ? "auto" : "none",
+      backgroundColor : bgColor || "white",
+
+       border: isSelected('self') && !isPreview ? '1px solid #007bff' : 'none',
+    }}
         className={`w-full top-0 z-40 transition-all duration-200 ${
           isEditing && !isPreview ? "ring-2 ring-pink-400 rounded-md" : ""
         }`}
       >
         <div
           className="max-w-[1000px] mx-auto px-6 flex items-center justify-between"
-          style={{ height }}
+          style={{ 
+            height : height,
+            margin : center ? "auto" : "none",
+          }}
         >
           {/* LOGO */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center  gap-3">
             {logoSrc ? (
               <img
                 src={logoSrc}
@@ -49,6 +76,7 @@ export default function NavbarBlock({
             ) : (
               <span
                 className="text-xl font-semibold select-none"
+                onClick={(e) => handleSelect(e, 'logoText')} 
                 style={{
                   color: block.logoColor || "#333",
                   fontSize: block.logoFontSize || "20px",
@@ -66,6 +94,7 @@ export default function NavbarBlock({
               <a
                 key={i}
                 href="#"
+                onClick={(e) => handleSelect(e, 'Links')} 
                 style={{
                   color: block.linkColor || "#333",
                   fontSize: block.linksFontSize || "14px",
@@ -81,6 +110,7 @@ export default function NavbarBlock({
           {/* CTA */}
           {showCTA && (
             <button
+            onClick={(e) => handleSelect(e, 'CTA')} 
               className="px-4 py-2 rounded text-sm transition"
               style={{
                 backgroundColor: block.ctaBgColor || "#2563eb",
@@ -203,5 +233,4 @@ export default function NavbarBlock({
     </div>
   );
 }
-
 

@@ -1,4 +1,4 @@
-import React, { useState , useEffect , useRef} from "react";
+import React, { useState , useEffect } from "react";
 import DraggableBlock from "./dragg";
 import NavbarBlock from "./BuiltinNav";
 import FormBlock from "./FormBlock";
@@ -10,45 +10,16 @@ import Sidebar from "./SideBar";
 import { DndContext, useSensor, useSensors, MouseSensor, TouchSensor } from "@dnd-kit/core";
 import { getProfile } from "../services/authService";
 import NavBuilderBlock from "./builderNav";
-import GlobalToolbar from "./GlobalToolbar";
-
+import GlobalToolbar from "./GlobalToolbar"
+import Footer from "../prebuiltSections/Footer";
 
 
 export default function Builder() {
 
   // profile image 
-  const profileImg = localStorage.getItem("profileImg");
+ const profileImg = localStorage.getItem("profileImg");
 
- const [isPreview, setIsPreview] = useState(false)
-  // responsive preview toggle
-  const [RSpreviewMode, setRSpreviewMode] = useState("desktop");
-
-
-
- const [blocks, setBlocks] = useState(() => {
-    const saved = localStorage.getItem("builderBlocks");
-    return saved ? JSON.parse(saved) : [];
-  });
-  // saving the block to local storage 
-  useEffect(() => {
-  localStorage.setItem("builderBlocks", JSON.stringify(blocks));
-  }, [blocks]);
-//  Load last used font globally at app start
-  useEffect(() => {
-    const savedFont = localStorage.getItem("selectedFont");
-    if (savedFont) {
-      WebFont.load({ google: { families: [savedFont] } });
-    }
-  }, []);
- const [canvasHeight, setCanvasHeight] = useState(
-  () => Number(localStorage.getItem("canvasHeight")) || 1200
-);
-useEffect(() => {
-  localStorage.setItem("canvasHeight", canvasHeight);
-}, [canvasHeight]);
-
-
-// user 
+ // user 
   const [user, setUser] = useState(null);
   useEffect(() => {
     const fetchUser = async () => {
@@ -58,54 +29,95 @@ useEffect(() => {
     fetchUser();
   }, []);
 
+// preview state
+const [isPreview, setIsPreview] = useState(false)
 
+// responsive preview toggle
+const [RSpreviewMode, setRSpreviewMode] = useState("desktop");
+
+
+// saving the block to local storage 
+ const [blocks, setBlocks] = useState(() => {
+    const saved = localStorage.getItem("builderBlocks");
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+  localStorage.setItem("builderBlocks", JSON.stringify(blocks));
+  }, [blocks]);
+
+//  Load last used font globally at app start
+  useEffect(() => {
+    const savedFont = localStorage.getItem("selectedFont");
+    if (savedFont) {
+      WebFont.load({ google: { families: [savedFont] } });
+    }
+  }, []);
+
+
+  // CanvaS height
+const [canvasHeight, setCanvasHeight] = useState(
+  () => Number(localStorage.getItem("canvasHeight")) || 1200
+);
+useEffect(() => {
+  localStorage.setItem("canvasHeight", canvasHeight);
+}, [canvasHeight]);
+
+
+
+// backgeound colors
   const [bgColor, setBgColor] = useState(() => localStorage.getItem("builderBgColor") || "#ffffff");
   const [navBgColor, setNavBgColor] = useState(() => localStorage.getItem("builderNavBgColor") || "#f8f9fa");
   const navbarBlock = blocks.find(b => b.type === "navbar");
   const [footerBG , setFooterBG] = useState(() => 
     localStorage.getItem("footerBgColor") || "#ffffff" 
   );
-  const [selectedBlockId, setSelectedBlockId] = useState(null);
-  const selectedBlock = blocks.find((b) => b.id === selectedBlockId);
- 
-  // sensors for drag and drop
-  const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
-  // const sensors = isPreview
-  // ? [] 
-  // : useSensors(
-  //     useSensor(MouseSensor),
-  //     useSensor(TouchSensor)
-  //   );
-
-  // saving the background colors to local storage as well
+    // saving the background colors to local storage as well
   useEffect(() => {
   localStorage.setItem("builderBgColor", bgColor);
   }, [bgColor]);
   useEffect(() => {
   localStorage.setItem("builderNavBgColor", navBgColor);
   }, [navBgColor]);
-
   useEffect(() => {
   localStorage.setItem("footerBgColor", footerBG);
   }, [footerBG]);
 
-  // selectBlock now only needs id
-  const selectBlock = (id) => {
-    setSelectedBlockId(id);
-  };
+
+  // const [selectedBlockId, setSelectedBlockId] = useState(null);
+  // const selectedBlock = blocks.find((b) => b.id === selectedBlockId);
+ 
+  // sensors for drag and drop
+  const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
 
 
-//   const deleteField = (fieldId) => {
-//   updateBlock(selectedBlock.id, "fields",
-//     selectedBlock.fields.filter(field => field.id !== fieldId)
-//   );
-// };
 
-  // Add block (keeps existing behavior)
+
+// NEW STATE: Tracks the block ID and the property key of the selected element
+const [selectedElement, setSelectedElement] = useState({ 
+    blockId: null, 
+    propertyKey: null 
+});
+
+const { blockId: selectedBlockId, propertyKey: selectedPropertyKey } = selectedElement;
+
+// New function to select a block OR a sub-element
+const selectElement = (blockId, propertyKey = 'self') => {
+    // If the user clicks the currently selected element again, deselect it
+    if (selectedElement.blockId === blockId && selectedElement.propertyKey === propertyKey) {
+        setSelectedElement({ blockId: null, propertyKey: null });
+    } else {
+        setSelectedElement({ blockId, propertyKey });
+    }
+};
+// Find the full block object that is currently selected
+const selectedBlock = blocks.find((b) => b.id === selectedBlockId);
+
+
+  // Add block 
   const addBlock = (type) => {
   const id = String(Date.now());
 
-    let newY = 100;
+  let newY = 100;
 
   if (blocks.length > 0) {
     const last = blocks[blocks.length - 1];
@@ -115,35 +127,38 @@ useEffect(() => {
   
   if (type === "hero") {
   const id = String(Date.now());
-
   const newHero = {
     id,
     type: "hero",
     title: "Your Next Big Idea Starts Here 🚀",
     subtitle:"Create stunning, responsive pages effortlessly with our builder.",
     buttonText: "Get Started",
-    buttonColor: "#2563eb",
+    buttonColor: "#1c398e",
     buttonTextColor: "#ffffff",
     bgColor: "transparent",
     titleColor : "#111111",
     subtitleColor : "#111111",
-    textColor: "#111111",
     titleBold : false,
     subtitleBold : false,
     buttonBold : false,
     titleSize : 30 ,
     subtitleSize : 16 ,
     buttonTextSize : 16,
-    fontFamily : "inter",
+    TitlefontFamily : "inter",
+    SubfontFamily : "inter",
+    BtnfontFamily : "inter",
     imageUrl: "/logo.png",
     x: 20,
     y: newY,
+    imgWidth : 400,
+    imgHeight : 400,
     width: 1200,
     height: 500,
+    textAlign: "left",
   };
 
   setBlocks((prev) => [...prev, newHero]);
-  setSelectedBlockId(id);
+  selectElement(id, 'self'); //  NEW LOGIC
   return;
   }
   if (type === "portfolio") {
@@ -152,8 +167,6 @@ useEffect(() => {
   const newPortfolio = {
     id,
     type: "portfolio",
-      title : "My Portfolio",
-      subtitle : "A few of my latest works",
       projects: [
   {
     id: 1,
@@ -180,7 +193,7 @@ useEffect(() => {
     title: "Your Next Big Idea Starts Here 🚀",
     subtitle:"Create stunning, responsive pages effortlessly with our builder.",
     buttonText: "Get Started",
-    buttonColor: "#2563eb",
+    buttonColor: "#1c398e",
     buttonTextColor: "#ffffff",
     bgColor: "transparent",
     textColor: "#111111",
@@ -193,15 +206,38 @@ useEffect(() => {
     titleSize : 30 ,
     subtitleSize : 16 ,
     buttonTextSize : 16,
-    fontFamily : "inter",
-    x: 20,
+    CardsfontFamily : "inter",
+    imageUrl: "/logo.png",    x: 20,
     y: newY,
     width: 1200,
     height: 500,
+
+    titeFontFamily : "inter",
+    SubtiteFontFamily : "inter",
+
+    // cards
+    cardTitleColor:"#111111",
+    cardSubtitleColor:"#111111",
+    cardButtonColor:"#1c398e",
+    cardButtonTextColor:"#ffffffff",
+     
+    cardTitleBold : true ,
+    cardSubtitleBold : false ,
+    cardBtnBold : false ,
+    
+    cardTitleSize : 20 ,
+    cardSubtitleSize : 16 ,
+    cardBtnSize : 16 ,
+
+    cardTitleFontFamily : "inter",
+    cardSubFontFamily : "inter",
+    cardBtnFontFamily : "inter",
+
+    textAlign : "center",
   };
 
   setBlocks((prev) => [...prev, newPortfolio]);
-  setSelectedBlockId(id);
+  // setSelectedBlockId(id);
   return;
   }
   if (type === "aboutSection") {
@@ -213,7 +249,7 @@ useEffect(() => {
     title: "About Us",
     description:" Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
     buttonText: "Contact Us",
-    buttonColor: "#2563eb",
+    buttonColor: "#1c398e",
     buttonTextColor: "#ffffff",
     bgColor: "transparent",
     textColor: "#111111",
@@ -224,23 +260,29 @@ useEffect(() => {
     titleSize : 30 ,
     descriptionSize : 16 ,
     buttonTextSize : 16,
-    fontFamily : "inter",
-    imageUrl: "/logo.png",
+    TitlefontFamily : "inter",
+    SubfontFamily : "inter",
+    BtnfontFamily : "inter",
+    imageUrl: "/logo.png",    imageUrl: "/logo.png",
     x: 20,
     y: newY,
+      imgWidth : 400,
+    imgHeight : 400,
     width: 1200,
     height: 500,
+    textAlign: "left",
+    buttonAlign : "left",
   };
 
   setBlocks((prev) => [...prev, newAbout]);
-  setSelectedBlockId(id);
+  // setSelectedBlockId(id);
   return;
   }
   if (type === "form") {
   const id = String(Date.now()); 
 
   const newForm = {
-    id, // ✅ use the same one
+    id,
     type: "form",
      x: 100,
      y: newY,
@@ -251,23 +293,28 @@ useEffect(() => {
       { id: 2, label: "Email", type: "email", value: "" },
       { id: 3, label: "Message", type: "textarea", value: "" },
     ],
+    labelSize : 16 ,
+    labelolor : "#06276eff",
+    labelBold : false ,
     buttonText: "Send",
+    labelFont : "inter",
     buttonColor : "#06276eff",
     color: "#333",
     bgColor: "#fff",
     btnTextColor: "#ffffff",
     Bold: false,
     btnFontSize: 14,
+    btnFont : "inter",
     isEditing: false,
   };
 
   setBlocks((prev) => [...prev, newForm]);
-  setSelectedBlockId(id);
+  // setSelectedBlockId(id);
   return; 
   }
   if (type === "navbar") {
     const hasNavbar = blocks.some(b => b.type === "navbar");
-    if (hasNavbar) return; // prevent multiple navbars
+    if (hasNavbar) return alert("You already have a navbar 😅");
 
     const newNavbar = {
       id,
@@ -276,7 +323,7 @@ useEffect(() => {
       y: 0,
       width: "100%",
       height: 64,
-      navBgColor: "#ffffff",
+      bgColor: "#ffffff",
       logoText: "Brand",
       logoSrc: null,
       links: ["Home", "About", "Contact"],
@@ -286,19 +333,22 @@ useEffect(() => {
       logoFontSize: 18,
       logoBold: false,
       linksBold : false,
+      logoFamily : "inter",
+      LinksFamily : "inter",
+      CTAFamily : "inter",
       linkColor: "#333333",
       ctaFontSize: 16,
       linksFontSize : 16,
-      ctaBgColor: "#06276eff",
+      ctaBgColor: "#1c398e",
       ctaTextColor: "#ffffff",
       ctaBold: false,
       ctaFontSize: 14,
-      bgColor: "transparent",
-
+      center : false,
     };
     setBlocks((prev) => [...prev, newNavbar]);
-    setSelectedBlockId(id);
-    return; //  stop here so no second block is added
+    // setSelectedBlockId(id);
+    selectElement(id, 'self'); 
+    return; 
   }
   //  Otherwise, handle normal blocks (text, image, button)
   const newBlock = {
@@ -311,9 +361,9 @@ useEffect(() => {
     height: type === "image" ? 500 : 50,
     fontSize: type === "text" ? 16 : 18,
     content: type === "text" ? "Text..." : "",
-    color: type === "text" ? "#000000" : "#06276eff",
+    color: type === "text" ? "#000000" : "#1c398e",
     label: type === "button" ? "Button" : "",
-    buttonColor: "#06276eff",
+    buttonColor: "#1c398e",
     src: null,
     isEditing: false,
     textAlign: "left",
@@ -324,23 +374,23 @@ useEffect(() => {
 
   const footerBlock = {
     id,
+    width: "100%",
+    height: 64,
     type: "footer",
     content: "© 2025 Your Brand — All rights reserved.",
     textColor: "#000000",
     textFontSize: 16,
     textBold: false,
+    bgColor : "white",
+    footerFont : "inter",
   };
 
   setBlocks((prev) => [...prev, footerBlock]);
-  setSelectedBlockId(id);
-  return;
+   selectElement(id, 'self');  return;
   }
-
-
   setBlocks((prev) => [...prev, newBlock]);
-  setSelectedBlockId(id);
+  selectElement(id, 'self'); // ✅ NEW LOGIC
 };
-
 
   // Auto-expand canvas height based on block positions
   useEffect(() => {
@@ -359,6 +409,8 @@ useEffect(() => {
   setCanvasHeight((prev) => (Math.abs(prev - newHeight) > 5 ? newHeight : prev));
   }, [blocks]);
 
+
+
   const updateBlock = (id, key, value) => {
     setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, [key]: value } : b)));
   };
@@ -374,10 +426,20 @@ useEffect(() => {
   reader.onloadend = () => updateBlock(id, "logoSrc", reader.result);
   reader.readAsDataURL(file);
   };
-  const deleteBlock = (id) => {
-    setBlocks((prev) => prev.filter((b) => b.id !== id));
-    if (selectedBlockId === id) setSelectedBlockId(null);
-  };
+const deleteBlock = (id) => {
+    // 1. Determine which ID to delete (use argument ID or the currently selected block ID)
+    const idToDelete = id || selectedBlockId; 
+    
+    if (!idToDelete) return; // Exit if no ID is found
+
+    // 2. Filter blocks to remove the one with the determined ID
+    setBlocks((prev) => prev.filter((b) => b.id !== idToDelete));
+    
+    // 3. Clear selection state if the deleted block was the selected one
+    if (selectedBlockId === idToDelete) {
+        setSelectedElement({ blockId: null, propertyKey: null }); // ✅ Use the new selection state setter
+    }
+};
   const handleDragEnd = (event) => {
     const { delta } = event;
     const id = event.active?.id;
@@ -406,6 +468,7 @@ useEffect(() => {
     const handlePointerMove = (moveEvent) => {
       const dx = moveEvent.clientX - startX;
       const dy = moveEvent.clientY - startY;
+      
 
       setBlocks((prev) =>
         prev.map((b) =>
@@ -463,6 +526,7 @@ useEffect(() => {
     if (e.target.closest(".navbar-editable")) return; 
     setSelectedBlockId(null);
   };
+  // export as html
 const exportLandingPage = () => {
   const canvasEl = document.getElementById("page-canvas");
   if (!canvasEl) {
@@ -542,29 +606,47 @@ ${googleFontsLink}
   a.click();
   URL.revokeObjectURL(url);
 };
+// duplicate function
+const duplicateBlock = (id) => {
+    const idToDuplicate = id || selectedBlockId; // Use argument ID or the currently selected block ID
 
- const duplicateBlock = (id) => {
-  setBlocks((prev) => {
-    const index = prev.findIndex((b) => b.id === id);
-    if (index === -1) return prev;
+    setBlocks((prev) => {
+        const index = prev.findIndex((b) => b.id === idToDuplicate);
+        if (index === -1) return prev;
 
-    const original = prev[index];
-    const newId = String(Date.now());
+        const original = prev[index];
+        const newId = String(Date.now());
 
-    // Create a shallow copy with new ID + slight offset so it’s visible
-    const duplicated = {
-      ...original,
-      id: newId,
-      x: (original.x || 0) + 30, // move 30px right
-      y: (original.y || 0) + 30, // move 30px down
-      isEditing: false,
-    };
+        // Create a deep copy using JSON parse/stringify for complex nested elements (like projects/fields)
+        const blockContent = JSON.parse(JSON.stringify(original)); 
 
-    const updated = [...prev];
-    updated.splice(index + 1, 0, duplicated);
-    return updated;
-  });
- };
+        // 💡 Ensure sub-element IDs are also unique when duplicating complex blocks
+        let projectsCopy = blockContent.projects ? blockContent.projects.map(p => ({ ...p, id: String(Date.now() + Math.random()) })) : original.projects;
+        let fieldsCopy = blockContent.fields ? blockContent.fields.map(f => ({ ...f, id: String(Date.now() + Math.random()) })) : original.fields;
+
+        // Create the duplicated block object
+        const duplicated = {
+            ...blockContent,
+            id: newId,
+            x: (original.x || 0) + 30, // move 30px right
+            y: (original.y || 0) + 30, // move 30px down
+            isEditing: false,
+            // Use the newly created copies for nested arrays
+            ...(projectsCopy && { projects: projectsCopy }),
+            ...(fieldsCopy && { fields: fieldsCopy }),
+        };
+
+        const updated = [...prev];
+        updated.splice(index + 1, 0, duplicated);
+
+        // Immediately select the duplicated block
+        selectElement(newId, 'self'); // Select the new block
+        
+        return updated;
+    });
+};
+
+
 
 
 
@@ -582,7 +664,6 @@ ${googleFontsLink}
 
     {/* builder */}
     <div className="min-h-screen flex bg-pink-100" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
-
      {/* sidebar */}
       <Sidebar
         isPreview={isPreview}
@@ -597,7 +678,7 @@ ${googleFontsLink}
       />
 
 
-      
+
       {/* start building */}
       <div  className="flex-1 p-2"
        onMouseDown={handleCanvasMouseDown}>        
@@ -609,6 +690,7 @@ ${googleFontsLink}
         handleImageUpload={handleImageUpload}
         duplicateBlock={duplicateBlock}
         deleteBlock={deleteBlock}
+        selectedPropertyKey={selectedPropertyKey} 
         />
         {/* height and resposniveness toolbar  */}
         <div style={{width : "60%"}}
@@ -676,8 +758,6 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
 
         </div>
 
-
-        
         {/* where the drag and drop is possible */}
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>         
           <div 
@@ -714,25 +794,29 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
             {navbarBlock && (
             <div
               onMouseDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedBlockId(navbarBlock.id);
-              }}
+              // onClick={(e) => {
+              //   e.stopPropagation();
+              //   selectElement(blocks.id, 'self');
+              // }}
               style={{
-                backgroundColor: navBgColor,
+                width : navbarBlock.width || "100%" ,
                 height: navbarBlock.height || 64, // default height
                 position: "relative",
-                width: "100%",
               }}
               className={`mb-6 navbar-editable ${!isPreview && selectedBlockId === navbarBlock.id ? "ring-2 ring-blue-400" : ""}`}
             >
               <NavbarBlock
+              id={navbarBlock.id}
               isPreview={isPreview}
                 block={navbarBlock}
+                selected={selectedBlockId === navbarBlock.id}
+                onChange={updateBlock}
+                deleteBlock={deleteBlock}
                 isEditing={selectedBlockId === navbarBlock.id}
-                onSelect={() => setSelectedBlockId(navbarBlock.id)}
                 onUpdate={(key, value) => updateBlock(navbarBlock.id, key, value)}
                 onUploadLogo={(file) => handleLogoUpload(navbarBlock.id, file)}
+                onElementSelect={selectElement} 
+                selectedPropertyKey={selectedPropertyKey}
               />
 
               {/* 🟦 Add resize handle only when selected */}
@@ -758,7 +842,7 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                 y={block.y}
                 isEditing={selectedBlockId === block.id}
                 onStartResize={!isPreview ? startResizing : undefined}
-                onSelect={selectBlock}
+                // onSelect={selectBlock}
                 onDragEnd={handleDragEnd}
                >
 
@@ -766,11 +850,10 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                 {/* TEXT */}
                 {block.type === "text" && (
   <div
-    onClick={(e) => {
-      e.stopPropagation();
-      setSelectedBlockId(block.id);
-      updateBlock(block.id, "isEditing", true);
-    }}
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      selectElement(block.id, 'self');
+                  }}
     style={{
       fontFamily: block.fontFamily || "Inter, sans-serif",
       fontWeight: block.bold ? "bold" : "normal",
@@ -795,6 +878,7 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
     }}
     contentEditable={!isPreview && block.isEditing}
     suppressContentEditableWarning={true}
+    onFocus={true}
     onInput={(e) =>
       updateBlock(block.id, "content", e.currentTarget.textContent)
     }
@@ -807,10 +891,10 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                 {/* IMAGE */}
                 {block.type === "image" && (
   <div
-    onClick={(e) => {
-      e.stopPropagation();
-      setSelectedBlockId(block.id);
-    }}
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      selectElement(block.id, 'self');
+                  }}
     className="relative inline-block"
     style={{
       width: block.width,
@@ -852,7 +936,10 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
 
                 {/* BUTTON */}
                 {block.type === "button" && (
-                  <div onClick={(e) => { e.stopPropagation(); setSelectedBlockId(block.id); }} className="relative inline-block" style={{ width: block.width, height: block.height === "auto" ? undefined : block.height }}>
+                  <div onClick={(e) => {
+                      e.stopPropagation();
+                      selectElement(block.id, 'self');
+                  }} className="relative inline-block" style={{ width: block.width, height: block.height === "auto" ? undefined : block.height }}>
                     {selectedBlockId === block.id && !isPreview && (
                       <>
                         {/* <button onPointerDown={(e) => e.stopPropagation()} onClick={() => deleteBlock(block.id)} className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-7 h-7">✖</button> */}
@@ -870,60 +957,46 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                      className="w-full h-full text-white font-semibold rounded shadow-md">{block.label}</button>
                   </div>
                 )}
-
                 {/* form */}
                 {block.type === "form" && (
                   <div
-                      onMouseDown={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
 
-  onClick={(e) => {
-    e.stopPropagation();
-    setSelectedBlockId(block.id);
-  }}
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      selectElement(block.id, 'self');
+                  }}
 >
   <FormBlock
     {...block}
     isPreview={isPreview}
+    onElementSelect={selectElement} 
+    selectedPropertyKey={selectedPropertyKey}
     selected={selectedBlockId === block.id}
-    style={{
-      background: block.bgColor,
-      color: block.color,
-      Bold : block.Bold ,
-      buttonColor: block.buttonColor,
-      btnTextColor: block.btnTextColor,
-      btnFontSize: block.btnFontSize,
-      width: block.width,
-      height: block.height || "auto",
-    }}
     onChange={updateBlock}
               onClick={(e) => {
                 e.stopPropagation();
-                setSelectedBlockId(block.id);
+                 selectElement(block.id, 'self');
               }}
                   />
 </div>
                    
                 )}
-
                 {/* hero section */}
                 {block.type === "hero" && (
                   <div
                    onMouseDown={(e) => e.stopPropagation()}
-                   onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedBlockId(block.id);
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      selectElement(block.id, 'self');
                   }}
-                    
-
-                  
                     style={{
-                      // background: block.bgColor,
-                      // color: block.color,
                       width: block.width,
                       height: block.height,
                     }}
                   >
                     <HeroBlock
+                    
                       {...block}
                       isPreview={isPreview}
                       selected={selectedBlockId === block.id}
@@ -933,14 +1006,15 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                       subtitleBold = {block.subtitleBold}
                       subtitleSize = {block.subtitleSize}
                       fontFamily = {block.fontFamily}
-
+                      //  New Prop to allow child to select sub-elements
+                     onElementSelect={selectElement} 
+                     selectedPropertyKey={selectedPropertyKey}
                       style={{
                       // background: block.bgColor,
-                      // color: block.color,
                       position: "relative",
                       width: block.width,
                       height: block.height,
-                      fontFamily: block.fontFamily || localStorage.getItem("selectedFont") || "Inter",
+                      fontFamily: block.fontFamily || localStorage.getItem("selectedFont") || "serif",
 
                     }}
                     />
@@ -950,9 +1024,10 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                 {block.type === "aboutSection" && (
                   <div
                   onMouseDown={(e) => e.stopPropagation()}
-                   onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedBlockId(block.id);
+
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      selectElement(block.id, 'self');
                   }}
                     style={{
                       // background: block.bgColor,
@@ -967,19 +1042,20 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                       selected={selectedBlockId === block.id}
                       onChange={updateBlock}
                       // onChange={updateBlock}
-                      // titleBold = {block.titleBold}
-                      // titleSize = {block.titleSize}
-                      // subtitleBold = {block.subtitleBold}
-                      // subtitleSize = {block.subtitleSize}
-                      // fontFamily = {block.fontFamily}
-
+                      titleBold = {block.titleBold}
+                      titleSize = {block.titleSize}
+                      subtitleBold = {block.subtitleBold}
+                      subtitleSize = {block.subtitleSize}
+                      fontFamily = {block.fontFamily}
+                     onElementSelect={selectElement} 
+                     selectedPropertyKey={selectedPropertyKey}
                       style={{
                       // background: block.bgColor,
-                      // color: block.color,
                       position: "relative",
                       width: block.width,
                       height: block.height,
-                      fontFamily: block.fontFamily || localStorage.getItem("selectedFont") || "Inter",
+                      fontFamily: block.fontFamily || localStorage.getItem("selectedFont") || "serif",
+
                     }}
                     />
                   </div>
@@ -987,16 +1063,12 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                 {block.type === "portfolio" && (
                   <div
                    onMouseDown={(e) => e.stopPropagation()}
-                   onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedBlockId(block.id);
-                  }}
-                    
-
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        selectElement(block.id, 'self');
+                    }}
                   
                     style={{
-                      // background: block.bgColor,
-                      // color: block.color,
                       width: block.width,
                       height: block.height,
                     }}
@@ -1007,6 +1079,9 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                       selected={selectedBlockId === block.id}
                       onChange={updateBlock}
                       isEditing={true}
+                      
+                     onElementSelect={selectElement} 
+                     selectedPropertyKey={selectedPropertyKey}
 
 
                       style={{
@@ -1022,42 +1097,39 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
               ))}
 
             
-            {/* FOOTER — static, always bottom */}
             {blocks
               .filter((b) => b.type === "footer")
               .map((block) => (
-                <footer
+                <div
                   key={block.id}
+                   onMouseDown={(e) => e.stopPropagation()}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setSelectedBlockId(block.id);
+                    selectElement(block.id, 'self');
                   }}
-                  style={{
-                    marginTop : "auto",
-                    position: "relative",
-                    bottom: 0,
-                    width: "100%",
-                    background:footerBG,
-                    textAlign: "center",
-                    padding: "1rem",
-                  }}
-                  className={`rounded-t-lg shadow-inner ${
-                    selectedBlockId === block.id ? "ring-2 ring-pink-400" : ""
-                  }`}
                 >
-                  <textarea
-                    style={{
-                      color : block.textColor  || "#020202ff",
-                      fontSize : block.textFontSize || 16,
-                      fontWeight : block.textBold ? "bold" : "normal",
-                    }}
-                    value={block.content}
-                    onChange={(e) =>
-                      updateBlock(block.id, "content", e.target.value)
-                    }
-                    className="w-full text-center bg-transparent outline-none resize-none font-medium text-gray-700"
-                  />
-                </footer>
+                   <Footer
+                   isPreview={isPreview}
+                   updateBlock={updateBlock}
+                      selected={selectedBlockId === block.id}
+                      onChange={updateBlock}
+                   id={block.id}
+                block={block}
+                isEditing={selectedBlockId === block.id}
+                onElementSelect={selectElement} 
+                selectedPropertyKey={selectedPropertyKey}
+                    content={block.content}
+                    textColor={block.textColor}
+                    textFontSize={block.textFontSize}
+                    textBold={block.textBold}
+                    bgColor={block.bgColor}
+                    footerFont={block.footerFont}
+                    width={block.width}
+                    height={block.height}
+                    deleteBlock={deleteBlock}
+                    
+                   />
+                </div> 
             ))}
           </div>
         </DndContext>
@@ -1066,4 +1138,3 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
     </>
   );
 }
-

@@ -19,7 +19,7 @@ const navigate = useNavigate();
 const handleRegister = (user) => {
   console.log("User registered:", user);
   setUser(user);
-  navigate("/projects");
+  navigate("/builder");
 };
    const handleLogin = (user) => {
     console.log("User Loged in:", user);
