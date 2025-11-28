@@ -216,6 +216,8 @@ const selectedBlock = blocks.find((b) => b.id === selectedBlockId);
     SubtiteFontFamily : "inter",
 
     // cards
+    cardsBGcolor: "#ffffffff",
+
     cardTitleColor:"#111111",
     cardSubtitleColor:"#111111",
     cardButtonColor:"#1c398e",
@@ -237,7 +239,6 @@ const selectedBlock = blocks.find((b) => b.id === selectedBlockId);
   };
 
   setBlocks((prev) => [...prev, newPortfolio]);
-  // setSelectedBlockId(id);
   return;
   }
   if (type === "aboutSection") {
@@ -617,7 +618,7 @@ const duplicateBlock = (id) => {
         const original = prev[index];
         const newId = String(Date.now());
 
-        // Create a deep copy using JSON parse/stringify for complex nested elements (like projects/fields)
+        // Create a deep copy using JSON parse/stringify for complex nested elements 
         const blockContent = JSON.parse(JSON.stringify(original)); 
 
         // 💡 Ensure sub-element IDs are also unique when duplicating complex blocks
@@ -720,7 +721,7 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
 
   {/* Responsive Toggle Toolbar */}
   {!isPreview && (
-  <div className="flex items-center justify-center gap-2 bg-white/80 backdrop-blur-md border border-gray-200 px-3 py-2 rounded-xl shadow-sm transition-all duration-300">
+  <div className="flex display-none items-center justify-center gap-2 bg-white/80 backdrop-blur-md border border-gray-200 px-3 py-2 rounded-xl shadow-sm transition-all duration-300">
     <button
       onClick={() => setRSpreviewMode("desktop")}
       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
@@ -763,8 +764,8 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
           <div 
           id="page-canvas" 
           style={{
-            display: "flex", 
-    flexDirection: "column",
+          display: "flex", 
+          flexDirection: "column",
           transform:!isPreview ? "scale(0.7)" : "scale(1)" ,
           transformOrigin: "top center",
           // width : "100%",
@@ -794,10 +795,6 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
             {navbarBlock && (
             <div
               onMouseDown={(e) => e.stopPropagation()}
-              // onClick={(e) => {
-              //   e.stopPropagation();
-              //   selectElement(blocks.id, 'self');
-              // }}
               style={{
                 width : navbarBlock.width || "100%" ,
                 height: navbarBlock.height || 64, // default height

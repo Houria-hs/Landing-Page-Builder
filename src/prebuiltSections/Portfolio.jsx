@@ -36,6 +36,7 @@ cardBtnBold,
 cardTitleSize,
 cardSubtitleSize,
 cardBtnSize,
+cardsBGcolor,
 }) => {
 
   // 💡 FIX 2: State to track which project image is currently being uploaded
@@ -98,7 +99,6 @@ const isSelected = (key) => selectedPropertyKey === key && selected;
 
  const handleImageChange = (e) => {
     const file = e.target.files[0];
-    // Use the selectedProjectId state set by handleProjectImageSelect
     if (file && selectedProjectId !== null) { 
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -111,6 +111,8 @@ const isSelected = (key) => selectedPropertyKey === key && selected;
             setSelectedProjectId(null); // Reset
         };
         reader.readAsDataURL(file);
+        fileInputRef.current.click();
+
     }
 };
 
@@ -123,8 +125,8 @@ const handleProjectImageSelect = (e, projectId) => {
     // Select a generic key for image styling controls in the toolbar
     onElementSelect(id, 'imageStyle'); 
     
-    // Trigger the hidden file input click
-
+    
+  fileInputRef.current.click();
 };
 
 // 💡 FIX 3: Corrected project text update handler
@@ -196,39 +198,31 @@ const handleProjectChange = (projectId, field, value) => {
       </div>
 
       {/* Cards Container */}
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3"
-      style={{
-        color : cardTextColor ,
-      }}>
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {projects.map((project) => (
           <div
             key={project.id}
-            className="bg-white group rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300  relative"
+            className=" group rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300  relative"
           >
             {/* Project Image Container */}
-            <div className="relative w-full h-56"
+            <div className="relative  w-full h-56"
             onClick={(e) => handleProjectImageSelect(e, project.id)}
             >
               <img
-    // 💡 FIX 5: Use project.image from the state object
                src={project.image} 
                 alt={project.name}
                  className="w-full h-full object-cover"
                 />
-              <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  style={{ display: 'none' }}
-              />
-
             </div>
 
 
 
     {/* card content */}
-    <div className="p-6 flex flex-col gap-3">
+    <div className="p-6 flex flex-col gap-3"
+    style={{
+      backgroundColor : cardsBGcolor || "white",
+    }}
+    >
       <h3
         style={{
           color : cardTitleColor || "black" ,
@@ -304,6 +298,13 @@ const handleProjectChange = (projectId, field, value) => {
     </div>
   </div>
 ))}
+              <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  style={{ display: 'none' }}
+              />
 
       </div>
 

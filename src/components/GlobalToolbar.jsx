@@ -169,6 +169,7 @@ const TOOLBAR_CONFIG = {
         // --- Complex Block: portfolio (Styling only) ---
         'portfolio:self': [
             ...(ELEMENT_CONFIGS.self || []),
+            { type: "color", name: "cardsBGcolor", label: "Cards Color" },
             { type: "align" }, 
         ],
 
@@ -188,7 +189,7 @@ const TOOLBAR_CONFIG = {
 
     'portfolio:buttonStyle': [
     { type: "font" , name : "cardBtnFontFamily" , label : "FontFamily" },
-    { type: "color", name: "cardButtonColor", label: "BG Color", big: true },
+    { type: "color", name: "cardButtonColor", label: "Bg Color", big: true },
     { type: "color", name: "cardButtonTextColor", label: "Text Color", big: true },
     { type: "number", name: "cardBtnSize", label: "Font Size" },
     { type: "toggle", name: "cardBtnBold", label: "Bold" },
