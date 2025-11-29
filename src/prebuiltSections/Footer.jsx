@@ -11,13 +11,10 @@ footerFont,
 isPreview,
 width,
 height,
-  selectedBlock,
-  duplicateBlock,
-  deleteBlock,
+
 onElementSelect, 
   selectedPropertyKey,
     selected,
-    updateBlock,
   onChange,
 }) => {
       const isSelected = (key) => selectedPropertyKey === key && selected;
@@ -33,8 +30,7 @@ onElementSelect,
                <footer
                   onClick={(e) => handleSelect(e, 'self')}
                   style={{
-                    marginTop : "auto",
-                    position: "relative",
+
                     bottom: 0,
                     width: width,
                     height : height ,

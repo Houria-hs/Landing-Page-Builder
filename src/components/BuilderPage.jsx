@@ -206,7 +206,6 @@ const selectedBlock = blocks.find((b) => b.id === selectedBlockId);
     titleSize : 30 ,
     subtitleSize : 16 ,
     buttonTextSize : 16,
-    CardsfontFamily : "inter",
     imageUrl: "/logo.png",    x: 20,
     y: newY,
     width: 1200,
@@ -1104,6 +1103,10 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                     e.stopPropagation();
                     selectElement(block.id, 'self');
                   }}
+                  style={{
+                                        marginTop : "auto",
+                    position: "relative",
+                  }}
                 >
                    <Footer
                    isPreview={isPreview}
@@ -1123,7 +1126,7 @@ className="flex ml-70 items-center justify-start gap-4 w-full mt-4 px-6">
                     footerFont={block.footerFont}
                     width={block.width}
                     height={block.height}
-                    deleteBlock={deleteBlock}
+                deleteBlock={deleteBlock}
                     
                    />
                 </div> 

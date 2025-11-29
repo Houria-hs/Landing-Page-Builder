@@ -14,7 +14,9 @@ const AboutSection = ({
   descriptionColor,
   titleSize,
   descriptionSize,
-  fontFamily,
+  TitlefontFamily,
+SubfontFamily,
+BtnfontFamily,
   imageUrl,
   buttonTextSize,
   buttonTextColor,
@@ -154,7 +156,7 @@ const handleImageSelect = (e) => {
       {/* Text Side */}
       <div
         className="w-full md:w-1/2 flex flex-col gap-6"
-        style={{ fontFamily ,
+        style={{ 
             textAlign : textAlign || "left",
         }}
       >
@@ -169,7 +171,7 @@ const handleImageSelect = (e) => {
             className="text-4xl font-bold outline-none cursor-text"
             style={{
                 color: titleColor || "#111", 
-                fontFamily : fontFamily || "serif",
+                fontFamily : TitlefontFamily || "serif",
                 fontSize : titleSize || 30 ,
                 fontWeight : titleBold ? "bold" : "normal",
                 border: isSelected('title') && !isPreview ? '1px solid #007bff' : 'none',
@@ -188,7 +190,7 @@ const handleImageSelect = (e) => {
             onBlur={(e) => onChange(id, "Description", e.currentTarget.textContent)} 
             className="text-gray-600 text-lg outline-none cursor-text"
             style={{
-                fontFamily : fontFamily || "serif",
+                fontFamily : SubfontFamily || "serif",
                 color : descriptionColor ,
                 fontSize : descriptionSize || 30 ,
                 fontWeight : descriptionBold ? "bold" : "normal",
@@ -209,6 +211,7 @@ const handleImageSelect = (e) => {
                 style={{
                     background: buttonColor || "#1c398e",
                     fontSize: buttonTextSize,
+                    fontFamily : BtnfontFamily || "inter",
                     fontWeight: buttonBold ? "bold" : "normal",
                     border: isSelected('buttonStyle') && !isPreview ? '2px dashed #00ff99' : 'none'
                 }}

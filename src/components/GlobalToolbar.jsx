@@ -110,7 +110,7 @@ const TOOLBAR_CONFIG = {
         { type: "color", name: "titleColor", label: "Color" },
         { type: "toggle", name: "titleBold", label: "Bold" },
     ],
-
+ 
     'hero:subtitle': [
         { type: "font" , name : "SubfontFamily" , label : "FontFamily" },
         { type: "number", name: "subtitleSize", label: "Font Size" },
@@ -314,10 +314,9 @@ const TOOLBAR_CONFIG = {
 // FIELD RENDERER (FIXED)
 // =========================
 const ToolbarField = ({ item, selectedBlock, updateBlock }) => {
-    //  Prioritize item.type for custom components (like font/align/toggle/button), 
-    //    and fall back to item.input for standard HTML inputs (number/color/text/textarea).
+    
     const type = item.type || item.input;
-    const field = item.name || item.field; // Use 'name' from new config, fallback to 'field'
+    const field = item.name || item.field; 
     const { label, action } = item;
     
     const stop = (e) => e.stopPropagation();
@@ -356,7 +355,6 @@ const ToolbarField = ({ item, selectedBlock, updateBlock }) => {
       return (
         <button
           onPointerDown={stop}
-          // 👇 Use 'field' variable here
           onClick={() =>
             updateBlock(selectedBlock.id, field, !selectedBlock[field])
           }
@@ -370,10 +368,10 @@ const ToolbarField = ({ item, selectedBlock, updateBlock }) => {
 
     case "font":
       return (
-              <FontSelector
-              selectedFont={selectedBlock?.fontFamily || "Inter"}
-              onChange={(font) => updateBlock(selectedBlock.id, "fontFamily", font)}
-            />
+    <FontSelector
+              selectedFont={selectedBlock[field] || "Inter"} 
+              onChange={(font) => updateBlock(selectedBlock.id, field, font)} 
+            />
       );
 
     case "align":

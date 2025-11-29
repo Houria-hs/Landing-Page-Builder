@@ -20,7 +20,9 @@ subtitleColor,
   subtitleBold,
   buttonBold,
   subtitleSize,
-  fontFamily,
+TitlefontFamily,
+SubfontFamily,
+BtnfontFamily,
   isPreview,
   imageUrl,
 imgWidth,
@@ -139,7 +141,7 @@ style={{
             className="text-4xl font-bold outline-none cursor-text"
             style={{
                 color: titleColor || "#111", 
-                fontFamily : fontFamily || "serif",
+                fontFamily : TitlefontFamily || "serif",
                 fontSize : titleSize || 30 ,
                 fontWeight : titleBold ? "bold" : "normal",
                 border: isSelected('title') && !isPreview ? '1px solid #007bff' : 'none',
@@ -161,7 +163,7 @@ style={{
             onBlur={(e) => onChange(id, "subtitle", e.currentTarget.textContent)} 
             className="text-gray-600 text-lg outline-none cursor-text"
             style={{
-                fontFamily : fontFamily || "serif",
+                fontFamily : SubfontFamily || "serif",
                 color : subtitleColor ,
                 fontSize : subtitleSize || 30 ,
                 fontWeight : subtitleBold ? "bold" : "normal",
@@ -181,6 +183,7 @@ style={{
                     background: buttonColor || "#1c398e",
                     fontSize: buttonTextSize,
                     fontWeight: buttonBold ? "bold" : "normal",
+                    fontFamily : BtnfontFamily || "inter",
                     border: isSelected('buttonStyle') && !isPreview ? '2px dashed #00ff99' : 'none'
                 }}
             >
