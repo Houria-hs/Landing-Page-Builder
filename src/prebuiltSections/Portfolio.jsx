@@ -95,24 +95,27 @@ const isSelected = (key) => selectedPropertyKey === key && selected;
     }, [selected, selectedPropertyKey, isPreview])
 
 
-
- const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file && selectedProjectId !== null) { 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const newProjects = projects.map(p => 
-                p.id === selectedProjectId 
-                    ? { ...p, image: reader.result } // Update the project's 'image' field
-                    : p
-            );
-            onChange(id, "projects", newProjects); 
-            setSelectedProjectId(null); // Reset
-        };
-        reader.readAsDataURL(file);
-        fileInputRef.current.click();
-
-    }
+const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file && selectedProjectId !== null) { 
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const newProjects = projects.map(p => 
+                p.id === selectedProjectId 
+                    ? { ...p, image: reader.result } 
+                    : p
+            );
+            onChange(id, "projects", newProjects); 
+            setSelectedProjectId(null); // Reset the ID
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    // ✅ ESSENTIAL: Reset the file input value after the file is processed.
+    // This ensures the onChange event fires even if the same file is selected again.
+    if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+    }
 };
 
 const handleProjectImageSelect = (e, projectId) => {
@@ -128,7 +131,7 @@ const handleProjectImageSelect = (e, projectId) => {
   fileInputRef.current.click();
 };
 
-// 💡 FIX 3: Corrected project text update handler
+//  Corrected project text update handler
 const handleProjectChange = (projectId, field, value) => {
     const updatedProjects = projects.map(p =>
     p.id === projectId ? { ...p, [field]: value } : p
