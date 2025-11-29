@@ -7,7 +7,7 @@ import Login from "./Authentications/Login";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProjectsPage from "./components/projects";
-
+import { ThemeGenerator } from "./AI/ThemGenerator";
 
 
 function App() {
@@ -36,6 +36,7 @@ const handleRegister = (user) => {
       <Route path="/register" element={<Register  onRegister={handleRegister} />} />
       <Route path="/login" element={<Login onLogin={handleLogin} />} />
       <Route path="/projects" element={<ProjectsPage />} />
+      <Route path="/AI" element={<ThemeGenerator />} />
     </Routes>
     </>
   )

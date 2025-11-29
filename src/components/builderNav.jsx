@@ -27,9 +27,9 @@ const NavBuilderBlock = ({isPreview, setIsPreview, exportLandingPage, user, prof
       My Projects
     </button>
     </Link>
-    <Link to="/">
-      <button className="text-gray-600 hover:text-pink-500 transition">
-      Templates
+    <Link to="/AI">
+      <button className="text-pink-600 text-bold hover:text-pink-500 transition">
+      AI Theme Generator
     </button>
     </Link>
   </div>
