@@ -2,7 +2,7 @@
 
 🌟 Project Overview
 
-[MVP] The Landing Page Builder is currently a Minimum Viable Product focused on delivering a foundational, component-based visual editor. It allows users to quickly assemble and preview simple, responsive landing pages using a core set of pre-built blocks. The primary goal of this MVP is to validate the drag-and-drop editing experience and secure user data through robust authentication, paving the way for advanced features like custom code injection and comprehensive styling options in future releases.
+[MVP] The Landing Page Builder is currently a Minimum Viable Product focused on delivering a foundational, component-based visual editor. It allows users to quickly assemble and preview simple, responsive landing pages using a core set of pre-built blocks. The primary goal of this MVP is to validate the drag-and-drop editing experience and secure user data through robust authentication, paving the way for advanced features like Auto Smart Alignment and Real-Time Collaboration in future releases.
 
 This project is built with a modern React architecture, utilizing a component-based system and Tailwind CSS for rapid, utility-first styling.
 
