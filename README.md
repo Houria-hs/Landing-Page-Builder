@@ -51,7 +51,6 @@ npm install
 
 Run the application
 
-The application will start in development mode, typically accessible at http://localhost:3000.
 
 npm run dev
 
